@@ -1,0 +1,16 @@
+{
+  "problems": [
+    {
+      "id": "prob-001",
+      "title": "Action Camera Market Gap",
+      "description": "YCombinator has identified a significant market gap in the action camera industry. The current market leader, GoPro, primarily targets extreme sports enthusiasts and professional athletes, leaving a substantial portion of potential users untapped.",
+      "marketAnalysis": "The action camera market has been dominated by GoPro with a 42% market share. Their products are priced between $199-$499, with the primary target audience being extreme sports enthusiasts (snowboarders, surfers, skydivers). Our research shows that there's a growing interest in action cameras from everyday consumers for family activities, travel experiences, and casual outdoor adventures. These consumers find current offerings expensive, overly complex, and intimidating. Additionally, there's minimal innovation in specialized use cases beyond sports, such as pet monitoring, educational recording, and everyday life documentation. Battery life, ease of use, and seamless content sharing remain pain points for the majority of users. Your task is to design a product strategy targeting this untapped market segment with a unique value proposition."
+    },
+    {
+      "id": "prob-002",
+      "title": "Remote Work Productivity Tools",
+      "description": "YCombinator is looking to invest in solutions that address the emerging challenges in remote work productivity and team collaboration.",
+      "marketAnalysis": "The shift to remote work has accelerated dramatically, with 58% of American knowledge workers now working remotely at least part-time. Current collaboration tools like Slack, Zoom, and Microsoft Teams have captured the basic communication needs, but there remain significant gaps in remote productivity, especially around spontaneous collaboration, creative brainstorming, and combating isolation/burnout. Our research indicates that remote workers spend an average of 2.6 hours daily in video meetings, leading to 'Zoom fatigue' and reduced productivity. Teams report decreased creative output and innovation when working remotely, attributing this to the lack of spontaneous interactions that typically occur in office environments. Furthermore, managers struggle with visibility into team productivity without being perceived as employing surveillance tactics. Your task is to develop a solution that addresses these challenges while maintaining privacy, promoting wellbeing, and enhancing team cohesion in distributed workforces."
+    }
+  ]
+}
