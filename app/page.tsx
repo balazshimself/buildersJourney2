@@ -1,10 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useAppState } from '@/hooks/useAppState';
-import { RulesPhase } from '@/components/rules-phase';
-import { ProblemPhase } from '@/components/problem-phase';
-import { DocumentPhase } from '@/components/document-phase';
+import { useAppState } from "@/hooks/useAppState";
+import { RulesPhase } from "@/components/rules-phase";
+import { ProblemPhase } from "@/components/problem-phase";
+import { DocumentPhase } from "@/components/document-phase";
 
 export default function Home() {
   const {
@@ -23,12 +22,10 @@ export default function Home() {
   // Render appropriate phase based on current app state
   const renderPhase = () => {
     switch (state.currentPhase) {
-      case 'rules':
-        return (
-          <RulesPhase onStart={startProblemPhase} />
-        );
-      
-      case 'problem':
+      case "rules":
+        return <RulesPhase onStart={startProblemPhase} />;
+
+      case "problem":
         return (
           <ProblemPhase
             problem={state.currentProblem!}
@@ -39,8 +36,8 @@ export default function Home() {
             onTimerChange={updateTimer}
           />
         );
-      
-      case 'document':
+
+      case "document":
         return (
           <DocumentPhase
             documents={state.documents}
@@ -53,7 +50,7 @@ export default function Home() {
             onAddNotification={addNotification}
           />
         );
-      
+
       default:
         return <div>Loading...</div>;
     }
