@@ -24,8 +24,6 @@ export function DocumentPanel({
   activeDocument,
   availableFunds = 5000, // Default to 5000 if not provided
 }: DocumentPanelProps) {
-  const [showBuildPanel, setShowBuildPanel] = useState(false);
-
   // Group documents by type
   const documentsByType = {
     main: documents.filter(
@@ -36,8 +34,6 @@ export function DocumentPanel({
   };
 
   const handleBuildSomethingClick = () => {
-    setShowBuildPanel(true);
-
     // Create a temporary document to show the build panel
     const buildSomethingDoc = {
       id: "build-something",
@@ -61,7 +57,6 @@ export function DocumentPanel({
             });
 
             // Hide the build panel
-            setShowBuildPanel(false);
           }}
         />
       ),

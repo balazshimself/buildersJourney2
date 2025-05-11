@@ -16,25 +16,17 @@ interface DocumentProps {
 
 export function Document({
   document,
-  onPositionChange,
-  onContentChange,
   onVisibilityToggle,
   onDelete,
   isActive,
   onActivate,
 }: DocumentProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editableContent, setEditableContent] = useState(document.content);
   const documentRef = useRef<HTMLDivElement>(null);
 
   // Handle editing
   const toggleEdit = () => {
     if (!document.editable) return;
-
-    // if (isEditing) {
-    //   // Save changes
-    //   onContentChange(document.id, editableContent);
-    // }
     setIsEditing(!isEditing);
   };
 
@@ -97,18 +89,6 @@ export function Document({
 
       {/* Document Content */}
       <div className="p-4 document-content overflow-y-auto max-h-96">
-        {/* {isEditing ? (
-          <textarea
-            value={editableContent}
-            onChange={(e) => setEditableContent(e.target.value)}
-            className="w-full h-64 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : (
-          <div className="prose prose-sm max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: document.content }} />
-          </div>
-        )} */}
         {document.content}
       </div>
 

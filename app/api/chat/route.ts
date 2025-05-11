@@ -53,19 +53,19 @@ export async function POST(req: NextRequest) {
           .describe(
             "The overall expected outcome of the business decision (positive, negative, or neutral)"
           ),
-        entity: z
-          .string()
-          .describe("The primary business concept or product mentioned"),
-        word_count: z.number().describe("The number of words in the input"),
+        initial_cost: z
+          .number()
+          .describe(
+            "The initial cost of starting this project. Positive integer"
+          ),
+        monetary_return: z
+          .number()
+          .describe("The expected monetary return of the specified actions"),
         chat_response: z
           .string()
           .describe(
-            "A detailed, realistic outcome of the business decision, including specific details about market reactions, revenue implications, and potential obstacles or successes"
+            "A detailed, specific outcome of the business decision, including specific details about market reactions, revenue implications, and potential obstacles or successes"
           ),
-        final_punctuation: z
-          .string()
-          .nullable()
-          .describe("The final punctuation mark in the input, if any."),
       })
       .describe("Response format for business simulation");
 
