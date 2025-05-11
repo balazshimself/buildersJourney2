@@ -2,15 +2,9 @@
 
 import { useState } from "react";
 import { Document as DocumentType } from "@/types";
-import { Button } from "@/components/ui/button";
-import {
-  FileTextIcon,
-  BarChart3Icon,
-  UserPlusIcon,
-  BellIcon,
-  RocketIcon,
-} from "lucide-react";
+import { FileTextIcon, UserPlusIcon, BellIcon, RocketIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BuildSomethingPanel } from "./build-something-panel";
 
 interface DocumentPanelProps {
   documents: DocumentType[];
@@ -20,40 +14,17 @@ interface DocumentPanelProps {
   onToggleVisibility: (id: string) => void;
   onSelectDocument: (document: DocumentType) => void;
   activeDocument: DocumentType | null;
+  availableFunds?: number; // Add funds property
 }
 
 export function DocumentPanel({
   documents,
   onCreateDocument,
-  onToggleVisibility,
   onSelectDocument,
   activeDocument,
+  availableFunds = 5000, // Default to 5000 if not provided
 }: DocumentPanelProps) {
-  const [isCreatingDocument, setIsCreatingDocument] = useState(false);
-  const [newDocumentTitle, setNewDocumentTitle] = useState("");
-  const buildSomethingDoc = {
-    id: "build-something",
-    type: "custom" as const,
-    title: "Build something! 🚀",
-    content: "",
-    editable: false,
-    visible: true,
-    createdAt: new Date(),
-  };
-
-  const handleCreateDocument = () => {
-    if (!newDocumentTitle.trim()) return;
-
-    onCreateDocument({
-      type: "market-research",
-      title: newDocumentTitle,
-      content: `# Research in Progress...\n\nYour team is working on: ${newDocumentTitle}\n\nResults will be available shortly.`,
-      editable: false,
-      visible: true,
-    });
-
-    setIsCreatingDocument(false);
-  };
+  const [showBuildPanel, setShowBuildPanel] = useState(false);
 
   // Group documents by type
   const documentsByType = {
@@ -65,8 +36,43 @@ export function DocumentPanel({
   };
 
   const handleBuildSomethingClick = () => {
+    setShowBuildPanel(true);
+
+    // Create a temporary document to show the build panel
+    const buildSomethingDoc = {
+      id: "build-something",
+      type: "custom" as const,
+      title: "Build something!",
+      content: (
+        <BuildSomethingPanel
+          availableFunds={availableFunds}
+          onComplete={(result) => {
+            // Create a permanent document with the result
+            onCreateDocument({
+              type: "market-research",
+              title: result.title,
+              content: result.content,
+              editable: false,
+              metadata: {
+                effect: result.effect,
+                cost: result.cost,
+                return: result.return,
+              },
+            });
+
+            // Hide the build panel
+            setShowBuildPanel(false);
+          }}
+        />
+      ),
+      editable: false,
+      visible: true,
+      createdAt: new Date(),
+      position: 0,
+      countdown: 10,
+    };
+
     onSelectDocument(buildSomethingDoc);
-    setIsCreatingDocument(true);
   };
 
   return (
@@ -128,14 +134,12 @@ export function DocumentPanel({
             <button
               className={cn(
                 "w-full px-3 py-2 text-left rounded-md text-sm flex items-center space-x-2",
-                activeDocument?.id === "build-something"
-                  ? "bg-blue-50 text-blue-700"
-                  : "hover:bg-gray-100"
+                "hover:bg-gray-100"
               )}
               onClick={handleBuildSomethingClick}
             >
               <RocketIcon className="h-4 w-4 text-blue-500" />
-              <span>Build something! 🚀</span>
+              <span>Build something!</span>
             </button>
           </div>
         </div>
@@ -164,55 +168,6 @@ export function DocumentPanel({
           </div>
         </div>
       </div>
-
-      {/* Research Form */}
-      {isCreatingDocument && (
-        <div className="absolute inset-y-0 left-64 right-0 bg-white">
-          <div className="max-w-2xl mx-auto p-6">
-            <h3 className="text-lg font-semibold mb-4">Start a New Project</h3>
-            <p className="text-gray-600 mb-4">
-              Since you have a plan, why don't you start acting on it? Most
-              people start by creating a prototype or doing some research!😉
-            </p>
-            <p className="text-gray-600 mb-4">
-              Write what you want to do, as if you were explaining it to an
-              associate!
-            </p>
-            <p className="text-gray-600 mb-6">
-              Your actions have consequences. Remember, as a business owner the
-              more well-thought-out your plan is, the more likely you are to
-              succeed.
-            </p>
-
-            <textarea
-              value={newDocumentTitle}
-              onChange={(e) => setNewDocumentTitle(e.target.value)}
-              placeholder="Describe your research or prototype plan..."
-              className="w-full p-3 text-sm border border-gray-300 rounded-md mb-4 h-32 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              autoFocus
-            />
-
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsCreatingDocument(false);
-                  onSelectDocument(documents[0]);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateDocument}
-                disabled={!newDocumentTitle.trim()}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Start Project
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

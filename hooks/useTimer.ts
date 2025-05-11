@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface UseTimerProps {
   initialTime: number;
@@ -19,12 +19,14 @@ export const useTimer = ({
   const formatTime = useCallback((timeInSeconds: number) => {
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = timeInSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
   }, []);
 
   // Calculate progress percentage
   const progress = useCallback(() => {
-    return (initialTime - time) / initialTime * 100;
+    return ((initialTime - time) / initialTime) * 100;
   }, [initialTime, time]);
 
   const start = useCallback(() => {

@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  env: {
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  },
+  experimental: {
+    serverActions: true,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
