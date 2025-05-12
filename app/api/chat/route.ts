@@ -3,18 +3,20 @@ import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 
-console.log("HERE");
-
 export const runtime = "edge";
 
 const TEMPLATE = `You are an AI assistant for a business simulation game. The player is participating in a mock interview/business simulation where they are building a startup.
 
-Based on the player's business decision, evaluate it and provide:
+BUSINESS PLAN:
+{businessPlan}
+
+Based on the player's business decision, evaluate it in the context of their existing business plan and provide:
 1. An assessment of whether the decision is likely to have a positive, negative, or neutral outcome
 2. A realistic and detailed result of the decision
 3. Consider factors like:
    - How detailed and well-thought-out the plan is
    - Whether it addresses a real market need
+   - Whether it aligns with their existing business strategy
    - If there are obvious flaws or strengths
    - Realistic market conditions
    - The stage of the business
@@ -24,7 +26,6 @@ Input from player:
 {input}`;
 
 export async function POST(req: NextRequest) {
-  console.log("HERE IT FUCKING IS!:)");
   try {
     // Ensure API key is set
     if (!process.env.OPENAI_API_KEY) {
@@ -38,11 +39,14 @@ export async function POST(req: NextRequest) {
     const messages = body.messages ?? [];
     const currentMessageContent = messages[messages.length - 1].content;
 
+    // Extract business plan from request if available
+    const businessPlan = body.businessPlan || "No business plan available.";
+
     const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
     const model = new ChatOpenAI({
       temperature: 0.7,
-      model: "gpt-4o-mini", // Use the model specified in your original code
+      model: "gpt-4o-mini",
       openAIApiKey: process.env.OPENAI_API_KEY,
     });
 
@@ -77,6 +81,7 @@ export async function POST(req: NextRequest) {
 
     const result = await chain.invoke({
       input: currentMessageContent,
+      businessPlan: businessPlan,
     });
 
     return NextResponse.json(result, { status: 200 });
