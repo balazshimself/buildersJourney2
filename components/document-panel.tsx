@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Document as DocumentType } from "@/types";
 import { FileTextIcon, UserPlusIcon, BellIcon, RocketIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,8 +54,6 @@ export function DocumentPanel({
                 return: result.return,
               },
             });
-
-            // Hide the build panel
           }}
         />
       ),

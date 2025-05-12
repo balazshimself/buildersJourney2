@@ -41,7 +41,6 @@ export const useAppState = () => {
   );
 
   const evaluateSolution = useCallback(() => {
-    // Skip evaluation for now and go straight to document phase
     startDocumentPhase();
   }, []);
 
