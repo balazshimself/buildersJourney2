@@ -232,17 +232,18 @@
 //     </div>
 //   );
 // }
+"use client";
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type BuildResponse = {
+type BuildResponse = {
   expectedEffect: "negative" | "neutral" | "positive";
   initialCost: number;
   monetaryReturn: number;
   result: string;
-  accepted?: boolean;
+  title?: string; // Add title field
 };
 
 interface BuildSomethingPanelProps {
@@ -250,9 +251,9 @@ interface BuildSomethingPanelProps {
     title: string;
     content: React.ReactNode;
     effect: "negative" | "neutral" | "positive";
+    accepted: boolean;
     cost: number;
     return: number;
-    accepted?: boolean;
   }) => void;
   availableFunds: number;
 }
@@ -274,6 +275,12 @@ export function BuildSomethingPanel({
     setError(null);
 
     try {
+      // Find business plan to include in request
+      const businessPlanEl = document.querySelector(
+        '[data-type="business-plan"]'
+      );
+      const businessPlan = businessPlanEl ? businessPlanEl.textContent : "";
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -288,9 +295,10 @@ export function BuildSomethingPanel({
             },
             {
               role: "user",
-              content: `As a startup founder, I want to: ${prompt}. Please evaluate this business decision and provide an outcome.`,
+              content: `As a startup founder, I want to: ${prompt}. Please evaluate this business decision and provide an outcome. Also suggest a short, catchy title for this project (15 characters max).`,
             },
           ],
+          businessPlan: businessPlan,
         }),
       });
 
@@ -312,6 +320,7 @@ export function BuildSomethingPanel({
             ? Math.floor(Math.random() * 1000) + 500
             : Math.floor(Math.random() * 500),
         result: data.chat_response,
+        title: data.title || generateTitle(prompt), // Use AI title or generate one
       };
 
       setResponse(buildResponse);
@@ -323,11 +332,28 @@ export function BuildSomethingPanel({
     }
   };
 
+  // Fallback title generator if API doesn't provide one
+  const generateTitle = (prompt: string): string => {
+    // Generate a title based on the first few words of prompt
+    const words = prompt.split(" ").filter((w) => w.length > 3);
+    const randomIndex = Math.floor(Math.random() * Math.min(words.length, 3));
+    const baseWord = words[randomIndex] || "Project";
+
+    // Add a random prefix
+    const prefixes = ["Pro", "New", "Smart", "Swift", "Agile", "Next", "Rapid"];
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+
+    return `${prefix} ${baseWord}`.substring(0, 15);
+  };
+
   const handleAccept = () => {
     if (!response) return;
 
+    // AI-generated or fallback title
+    const projectTitle = response.title || generateTitle(prompt);
+
     onComplete({
-      title: prompt.length > 30 ? prompt.substring(0, 30) + "..." : prompt,
+      title: projectTitle,
       content: (
         <div className="p-4">
           <p className="font-bold mb-2">Business Decision:</p>
@@ -355,17 +381,20 @@ export function BuildSomethingPanel({
         </div>
       ),
       effect: response.expectedEffect,
+      accepted: true, // Mark as accepted
       cost: response.initialCost,
       return: response.monetaryReturn,
-      accepted: true,
     });
   };
 
   const handleDeny = () => {
     if (!response) return;
 
+    // AI-generated or fallback title for denied projects too
+    const projectTitle = response.title || generateTitle(prompt);
+
     onComplete({
-      title: prompt.length > 30 ? prompt.substring(0, 30) + "..." : prompt,
+      title: projectTitle,
       content: (
         <div className="p-4">
           <p className="font-bold mb-2">Business Decision (Canceled):</p>
@@ -375,7 +404,8 @@ export function BuildSomethingPanel({
           </p>
         </div>
       ),
-      effect: response.expectedEffect,
+      effect: response.expectedEffect, // Keep the effect type
+      accepted: false, // Mark as not accepted
       cost: 0, // No cost for denied projects
       return: 0,
     });
