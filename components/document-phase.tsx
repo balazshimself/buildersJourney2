@@ -5,6 +5,7 @@ import { Document as DocumentType } from "@/types";
 import { Timer } from "@/components/ui/timer";
 import { Progress } from "@/components/ui/progress";
 import notificationsData from "@/data/notifications.json";
+import { ProjectTimeline } from "./project-timeline";
 import {
   Accordion,
   AccordionContent,
@@ -228,8 +229,19 @@ export function DocumentPhase({
   };
 
   const handleTimelineClick = () => {
-    // For now, do nothing
-    console.log("Timeline button clicked - not implemented yet");
+    // Initialize the ProjectTimeline component
+    const timelineDoc = {
+      id: "project-timeline",
+      type: "timeline" as const,
+      title: "Project Timeline",
+      content: <ProjectTimeline />,
+      editable: false,
+      visible: true,
+      createdAt: new Date(),
+      position: 0,
+    };
+
+    setActiveDocument(timelineDoc);
   };
 
   return (

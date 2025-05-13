@@ -1,15 +1,12 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { AppSidebar } from "@/components/app-sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "YC Interview Simulator",
-  description:
-    "Test your thinking and brainstorming skills with a YCombinator-style interview simulation",
+  title: "Builder's Journey",
+  description: "",
 };
 
 export default function RootLayout({
@@ -18,13 +15,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    // <SidebarProvider className="h-full">
-    //   <AppSidebar />
-    //   <body className={`${inter.className} h-full`}>
-    //     <SidebarTrigger />
-    //     {children}
-    //   </body>
-    // </SidebarProvider>
     <html lang="en" className="h-full">
       <body className={`${inter.className} h-full`}>{children}</body>
     </html>

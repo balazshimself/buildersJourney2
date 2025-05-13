@@ -4,7 +4,7 @@ import { useAppState } from "@/hooks/useAppState";
 import { RulesPhase } from "@/components/rules-phase";
 import { ProblemPhase } from "@/components/problem-phase";
 import { DocumentPhase } from "@/components/document-phase";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function Home() {
   const {
