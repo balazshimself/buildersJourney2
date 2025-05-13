@@ -243,7 +243,7 @@ export function DocumentPhase({
             <div className="text-xl font-semibold">
               ${companyValue.toLocaleString()}
             </div>
-            <Progress value={progressToTarget} className="h-2" />
+            {/* <Progress value={progressToTarget} className="h-2" /> */}
             <div className="text-xs text-gray-500 text-right">
               Target: $100,000
             </div>
