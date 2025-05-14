@@ -17,7 +17,7 @@ export type GanttTask = {
 
 interface GanttChartProps {
   tasks: GanttTask[];
-  viewMode?: "Quarter Day" | "Half Day" | "Day" | "Week" | "Month";
+  viewMode?: "Day" | "Week" | "Month";
   className?: string;
   onTaskClick?: (task: GanttTask) => void;
   onDateChange?: (task: GanttTask, start: Date, end: Date) => void;

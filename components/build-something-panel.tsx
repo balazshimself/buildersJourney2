@@ -244,6 +244,9 @@ type BuildResponse = {
   monetaryReturn: number;
   result: string;
   title?: string; // Add title field
+  management?: { title: string; content: string; tag: string };
+  marketing?: { title: string; content: string; tag: string };
+  product?: { title: string; content: string; tag: string };
 };
 
 interface BuildSomethingPanelProps {
@@ -254,6 +257,9 @@ interface BuildSomethingPanelProps {
     accepted: boolean;
     cost: number;
     return: number;
+    management?: { title: string; content: string; tag: string };
+    marketing?: { title: string; content: string; tag: string };
+    product?: { title: string; content: string; tag: string };
   }) => void;
   availableFunds: number;
 }
@@ -380,6 +386,9 @@ export function BuildSomethingPanel({
           </div>
         </div>
       ),
+      management: response.management,
+      product: response.product,
+      marketing: response.marketing,
       effect: response.expectedEffect,
       accepted: true, // Mark as accepted
       cost: response.initialCost,
@@ -404,6 +413,9 @@ export function BuildSomethingPanel({
           </p>
         </div>
       ),
+      management: response.management,
+      product: response.product,
+      marketing: response.marketing,
       effect: response.expectedEffect, // Keep the effect type
       accepted: false, // Mark as not accepted
       cost: 0, // No cost for denied projects
