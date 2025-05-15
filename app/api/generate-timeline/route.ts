@@ -1,3 +1,4 @@
+// First route.ts file
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
@@ -5,29 +6,51 @@ import { PromptTemplate } from "@langchain/core/prompts";
 
 export const runtime = "edge";
 
-const TEMPLATE = `You are an AI assistant for a business simulation game. The player is developing a startup business.
+const TEMPLATE = ` You are an AI assistant for a business simulation game. The player is participating in a mock business simulation where they are building a startup to solve the following problem:
 
-BUSINESS PLAN:
-{businessPlan}
+PROBLEM STATEMENT: {problemStatement}
 
-Based on the business plan above, create a realistic project timeline with tasks, milestones, and dependencies.
-Generate a JSON array of Gantt chart tasks with the following properties:
-- id: A unique task identifier (task-1, task-2, etc.)
-- name: A concise, descriptive name for the task (max 30 chars)
-- start: Start date in ISO format
-- end: End date in ISO format
-- progress: Percentage completion (0-100)
-- dependencies: Optional comma-separated list of task IDs this task depends on
-- customClass: Optional CSS class (task-milestone for significant events, task-critical for high-priority items)
+Their goal is to increase the value of their business by as much as possible.
 
-Create a 6-month timeline starting from today's date. Include 8-12 tasks that cover:
-1. Product development stages
-2. Market research activities
-3. Marketing and launch preparations
-4. Funding or resource allocation
-5. Important milestones
+BUSINESS PLAN: {businessPlan}
 
-Make the timeline reflect a realistic product development cycle with appropriate task durations and dependencies.`;
+Their current budget is:
+
+BUDGET: {budget}
+
+BUILD LOGS (Previous Actions): {buildLogs}
+
+Based on the player's business decision, evaluate it in the context of the problem they're trying to solve, their existing business plan, current budget, and previous actions.
+Here's how to respond:
+- The information you provide should be specific and creative.
+- The player CANNOT make information up (e.g., "I have a rich friend to grant me a starting loan," "I know how to make the product myself, I don't need to hire anyone").
+- You should be ruthless in your responses if they are not providing good and specific enough ideas to keep their business afloat.
+- You can REJECT their proposal if:
+  - It isn't relevant (e.g., they write a shopping list, they ramble).
+  - They aren't specific enough (e.g., "I want to build a prototype," "I want to hire someone").
+  - It exceeds their current budget without a clear funding plan.
+
+Here is what to provide:
+- An assessment of whether the decision is likely to have a positive, negative, or neutral outcome.
+- A realistic and detailed result of the decision, considering the current budget and how it affects available resources.
+- How this decision affects THREE key areas of the business:
+  - PRODUCT (Design/Development): Specific impacts on product features, development timeline, or technical aspects.
+  - MARKETING: How this affects marketing strategy, customer acquisition, or brand positioning.
+  - MANAGEMENT: Effects on team structure, operations, resource allocation, or company culture.
+
+For each of those three categories, provide:
+- A brief headline/title (max 10 words).
+- A 1-2 sentence impact description.
+- Whether this represents a "milestone," "update," or "event" for that category.
+
+Consider factors like:
+- How well the decision addresses the problem statement.
+- How it aligns with prior build logs and business strategy.
+- Whether it fits within the current budget or requires additional funding.
+- Realistic market conditions and the stage of the business.
+
+Input from player:
+{input} `;
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,7 +63,15 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+    const messages = body.messages ?? [];
+    const currentMessageContent = messages[messages.length - 1].content;
+
+    // Extract business plan and build logs from request if available
+    const problemStatement =
+      body.problemStatement || "No problem statement available.";
+    const budget = body.budget || "No budget available.";
     const businessPlan = body.businessPlan || "No business plan available.";
+    const buildLogs = body.buildLogs || "No previous build logs available.";
 
     const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
@@ -50,120 +81,88 @@ export async function POST(req: NextRequest) {
       openAIApiKey: process.env.OPENAI_API_KEY,
     });
 
-    const schema = z
-      .object({
-        tasks: z
+    // Define the data structure for each template type
+    const TemplateSchema = z.union([
+      z.object({
+        type: z.literal("staticText"),
+        data: z.object({
+          title: z.string(),
+          text: z.string(),
+        }),
+      }),
+      z.object({
+        type: z.literal("progressBar"),
+        data: z.object({
+          label: z.string(),
+          currentValue: z.number().min(0).max(100),
+          targetValue: z.number().min(0).max(100).nullable(),
+        }),
+      }),
+      z.object({
+        type: z.literal("cardChoice"),
+        data: z
           .array(
             z.object({
-              id: z.string(),
-              name: z.string().max(30),
-              start: z.string().datetime(),
-              end: z.string().datetime(),
-              progress: z.number().min(0).max(100),
-              dependencies: z.string().optional(),
-              customClass: z.string().optional(),
+              title: z.string(),
+              description: z.string(),
+              cost: z.number(),
+              budgetImpact: z.number(),
+              effects: z.array(
+                z.object({
+                  metric: z.string(),
+                  change: z.number(),
+                })
+              ),
             })
           )
-          .min(8)
-          .max(15)
-          .describe("Array of timeline tasks"),
-      })
-      .describe("Project timeline data");
+          .min(1),
+      }),
+    ]);
 
-    const functionCallingModel = model.withStructuredOutput(schema, {
-      name: "timeline_formatter",
+    // Define the overall response schema
+    const ResponseSchema = z.object({
+      result: z.union([
+        // Rejection case
+        z.object({
+          type: z.literal("rejected"),
+          reason: z.string(),
+        }),
+        // Array of document updates
+        z.object({
+          type: z.literal("accepted"),
+          content: z
+            .array(
+              z.object({
+                document: z.enum([
+                  "Marketing",
+                  "Product Development",
+                  "Management",
+                ]),
+                component: TemplateSchema,
+              })
+            )
+            .min(1),
+        }),
+      ]),
+    });
+
+    const functionCallingModel = model.withStructuredOutput(ResponseSchema, {
+      name: "output_formatter",
     });
 
     const chain = prompt.pipe(functionCallingModel);
 
     const result = await chain.invoke({
+      problemStatement: problemStatement,
+      budget: budget,
+      input: currentMessageContent,
       businessPlan: businessPlan,
+      buildLogs: buildLogs,
     });
 
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json(result.result, { status: 200 });
   } catch (e: any) {
-    console.error("Error generating timeline:", e);
-
-    // Return fallback tasks if there's an error
-    const fallbackTasks = generateFallbackTasks();
-
-    return NextResponse.json({ tasks: fallbackTasks }, { status: 200 });
+    console.error("Error in chat:", e);
+    return NextResponse.json({ error: e.message }, { status: e.status ?? 500 });
   }
-}
-
-// Generate fallback tasks for the timeline if the AI generation fails
-function generateFallbackTasks() {
-  const today = new Date();
-  const startDate = new Date();
-
-  // Create dates relative to now
-  function getDate(dayOffset: number) {
-    const d = new Date(today);
-    d.setDate(d.getDate() + dayOffset);
-    return d.toISOString();
-  }
-
-  return [
-    {
-      id: "task-1",
-      name: "Market Research",
-      start: getDate(-15),
-      end: getDate(15),
-      progress: 100,
-    },
-    {
-      id: "task-2",
-      name: "Product Design",
-      start: getDate(0),
-      end: getDate(30),
-      progress: 80,
-    },
-    {
-      id: "task-3",
-      name: "Prototype Development",
-      start: getDate(20),
-      end: getDate(50),
-      progress: 30,
-      dependencies: "task-2",
-    },
-    {
-      id: "task-4",
-      name: "User Testing",
-      start: getDate(45),
-      end: getDate(75),
-      progress: 0,
-      dependencies: "task-3",
-    },
-    {
-      id: "task-5",
-      name: "Marketing Strategy",
-      start: getDate(30),
-      end: getDate(60),
-      progress: 10,
-    },
-    {
-      id: "task-6",
-      name: "Initial Funding Round",
-      start: getDate(40),
-      end: getDate(70),
-      progress: 0,
-    },
-    {
-      id: "task-7",
-      name: "Final Production",
-      start: getDate(70),
-      end: getDate(100),
-      progress: 0,
-      dependencies: "task-3,task-4",
-    },
-    {
-      id: "task-8",
-      name: "Product Launch",
-      start: getDate(100),
-      end: getDate(101),
-      progress: 0,
-      dependencies: "task-5,task-7",
-      customClass: "task-milestone",
-    },
-  ];
 }

@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { AppState, Document, Problem } from "@/types";
 import problemsData from "@/data/problems.json";
+import { AIResponse } from "@/components/templates/templateCompontents";
 
 const INITIAL_STATE: AppState = {
   currentPhase: "rules",
@@ -9,6 +10,7 @@ const INITIAL_STATE: AppState = {
   userSolution: "",
   timer: 0,
   isPassed: null,
+  isValidating: false,
 };
 
 export const useAppState = () => {
@@ -27,6 +29,7 @@ export const useAppState = () => {
       timer: 300, // 5 minutes in seconds
       userSolution: "",
       isPassed: null,
+      isValidating: false,
     });
   }, [state]);
 
@@ -40,46 +43,145 @@ export const useAppState = () => {
     [state]
   );
 
-  const evaluateSolution = useCallback(() => {
-    startDocumentPhase();
-  }, []);
+  const evaluateSolution = useCallback(async () => {
+    // Set validating state
+    setState((prevState) => ({
+      ...prevState,
+      isValidating: true,
+    }));
 
-  const startDocumentPhase = useCallback(() => {
-    // Create initial documents based on user solution
-    const businessPlan: Document = {
-      id: "doc-bp-001",
-      type: "business-plan",
-      title: "Business Plan",
-      content: `Business Plan\n\nExecutive Summary:\nOur company aims to revolutionize the action camera market by targeting casual users and families. We'll offer an intuitive, affordable camera with smart features that make capturing everyday moments effortless.\n\nProduct Strategy:\n- Easy-to-use interface with automatic mode selection\n- Competitive pricing at $149\n- Cloud integration for instant sharing\n- Family-friendly features like child-safe mode\n\nTarget Market:\n- Families with children\n- Travel enthusiasts\n- Pet owners\n- Social media content creators\n\nRevenue Model:\n- Hardware sales\n- Premium cloud storage subscriptions\n- Optional accessories\n\nGrowth Strategy:\n- Direct-to-consumer sales\n- Partnership with family-oriented retailers\n- Social media influencer marketing\n- Customer referral program`,
-      editable: true,
-      createdAt: new Date(),
-    };
+    try {
+      // Call API to validate business plan
+      const response = await fetch("/api/validate-business-plan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          problemStatement: state.currentProblem?.marketAnalysis || "",
+          businessPlan: state.userSolution,
+        }),
+      });
 
-    const timeline: Document = {
-      id: "doc-tl-001",
-      type: "timeline",
-      title: "Project Timeline",
-      content: `# Project Timeline\n\nQ2 2025\n- Product design finalization\n- Manufacturing partner selection\n- Initial prototype production\n\nQ3 2025\n- Beta testing program\n- Marketing campaign development\n- Supply chain optimization\n\nQ4 2025\n- Production ramp-up\n- Retail partnership establishment\n- Website and app development\n\nQ1 2026\n- Official product launch\n- Marketing campaign execution\n- Customer support team training`,
-      editable: true,
-      createdAt: new Date(),
-    };
+      if (!response.ok) {
+        throw new Error("Failed to validate business plan");
+      }
 
-    const marketResearch: Document = {
-      id: "doc-mr-001",
-      type: "market-research",
-      title: "Initial Market Analysis",
-      content: `# Market Research Summary\n\nMarket Size:\n- Global action camera market: $2.3B (2024)\n- Expected growth: 8.9% CAGR\n- Untapped casual user segment: 65% of potential market\n\nUser Preferences:\n- 78% want easier operation\n- 82% consider current prices too high\n- 91% interested in automatic cloud backup\n\nCompetitor Analysis:\n- GoPro: 42% market share, focus on professionals\n- DJI: 15% market share, drone integration\n- Others: 43% combined, varied focus\n\nPrice Sensitivity:\n- Sweet spot: $100-200\n- Willing to pay more for cloud features\n- Subscription model acceptance growing`,
-      editable: true,
-      createdAt: new Date(),
-    };
+      const result = await response.json();
 
-    setState({
-      ...state,
-      currentPhase: "document",
-      documents: [businessPlan, timeline, marketResearch],
-      timer: 1800, // 30 minutes in seconds
-    });
+      // Use the validated result to start document phase
+      startDocumentPhase(result);
+    } catch (error) {
+      console.error("Error validating solution:", error);
+      // Fallback: proceed anyway if validation fails
+      const fallbackResponse: AIResponse = {
+        type: "accepted",
+        content: [
+          {
+            document: "Product Development",
+            component: {
+              type: "staticText",
+              data: {
+                title: "Initial Development Plan",
+                text: "Based on your business plan, we'll begin development of the core product features specified. The initial phase will focus on creating a minimum viable product.",
+              },
+            },
+          },
+          {
+            document: "Marketing",
+            component: {
+              type: "staticText",
+              data: {
+                title: "Market Strategy",
+                text: "Your target audience has been identified. Initial marketing efforts will focus on building awareness among this demographic through targeted digital channels.",
+              },
+            },
+          },
+          {
+            document: "Management",
+            component: {
+              type: "staticText",
+              data: {
+                title: "Team Structure",
+                text: "Your startup will begin with a lean team focused on core development and marketing. Additional specialists will be recruited as needed as the product matures.",
+              },
+            },
+          },
+        ],
+      };
+      startDocumentPhase({
+        type: "accepted",
+        formalizedPlan: state.userSolution,
+        content: fallbackResponse.content,
+      });
+    }
   }, [state]);
+
+  const startDocumentPhase = useCallback(
+    (result: any) => {
+      // Extract data based on whether the plan was accepted or rejected
+      const isAccepted = result.type === "accepted";
+      const formalizedPlan = result.formalizedPlan || state.userSolution;
+
+      // Create the business plan document
+      const businessPlan: Document = {
+        id: "doc-bp-001",
+        type: "business-plan",
+        title: "Business Plan",
+        content: formalizedPlan,
+        editable: true,
+        createdAt: new Date(),
+        metadata: {
+          aiResponse: result, // Store the full AI response for reference
+        },
+      };
+
+      const timeline: Document = {
+        id: "doc-tl-001",
+        type: "timeline",
+        title: "Project Timeline",
+        content: `# Project Timeline\n\nQ2 2025\n- Product design finalization\n- Manufacturing partner selection\n- Initial prototype production\n\nQ3 2025\n- Beta testing program\n- Marketing campaign development\n- Supply chain optimization\n\nQ4 2025\n- Production ramp-up\n- Retail partnership establishment\n- Website and app development\n\nQ1 2026\n- Official product launch\n- Marketing campaign execution\n- Customer support team training`,
+        editable: true,
+        createdAt: new Date(),
+      };
+
+      const marketResearch: Document = {
+        id: "doc-mr-001",
+        type: "market-research",
+        title: "Initial Market Analysis",
+        content: `# Market Research Summary\n\n${
+          state.currentProblem?.marketAnalysis || ""
+        }`,
+        editable: true,
+        createdAt: new Date(),
+      };
+
+      // Add feedback document if rejected
+      let documents = [businessPlan, timeline, marketResearch];
+
+      if (!isAccepted) {
+        const feedback: Document = {
+          id: "doc-feedback-001",
+          type: "notification",
+          title: "Business Plan Feedback",
+          content: `# Advisor Feedback\n\nYour business plan has some concerns, but we'll proceed with development.\n\n## Feedback:\n${result.reason}\n\nPlease consider this feedback as you refine your strategy going forward.`,
+          editable: false,
+          createdAt: new Date(),
+        };
+        documents.push(feedback);
+      }
+
+      setState({
+        ...state,
+        currentPhase: "document",
+        documents: documents,
+        timer: 1800, // 30 minutes in seconds
+        isPassed: isAccepted,
+        isValidating: false,
+      });
+    },
+    [state]
+  );
 
   const addDocument = useCallback(
     (document: Omit<Document, "id" | "visible" | "createdAt">) => {

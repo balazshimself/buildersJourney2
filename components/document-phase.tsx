@@ -6,6 +6,8 @@ import { Timer } from "@/components/ui/timer";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { DocumentEditor } from "@/components/document-editor";
 import { useSpecializedDocuments } from "@/hooks/use-specialized-documents";
+import { AIResponse } from "@/components/templates/templateCompontents";
+import React from "react";
 
 interface DocumentPhaseProps {
   documents: DocumentType[];
@@ -37,12 +39,7 @@ export function DocumentPhase({
   const [hasNewNotification, setHasNewNotification] = useState(false);
 
   const {
-    productEntries,
-    marketingEntries,
-    managementEntries,
-    addProductEntry,
-    addMarketingEntry,
-    addManagementEntry,
+    addEntriesFromAIResponse,
     showProductDocument,
     showMarketingDocument,
     showManagementDocument,
@@ -58,6 +55,17 @@ export function DocumentPhase({
     ),
     buildLogs: documents.filter((doc) => doc.type === "market-research"),
   };
+
+  // Get the problem statement from documents
+  const problemStatement = React.useMemo(() => {
+    const problemDoc = documents.find(
+      (doc) =>
+        doc.type === "market-research" &&
+        typeof doc.content === "string" &&
+        doc.content.includes("Market Analysis")
+    );
+    return problemDoc?.content || "";
+  }, [documents]);
 
   // Cleanup all intervals on unmount
   useEffect(() => {
@@ -156,8 +164,9 @@ export function DocumentPhase({
           content: (
             <BuildSomethingPanel
               availableFunds={companyValue}
+              problemStatement={problemStatement?.toString() || ""}
               onComplete={(result) => {
-                // Add to build logs as before
+                // Add to build logs
                 onAddDocument({
                   type: "market-research",
                   title: result.title,
@@ -171,45 +180,25 @@ export function DocumentPhase({
                   },
                 });
 
-                // Update the specialized documents based on AI response
-                const now = new Date();
-                const entryId = `entry-${Date.now()}`;
-
-                // Update product entries if provided by AI
-                if (result.product) {
-                  addProductEntry({
-                    id: `product-${entryId}`,
-                    title: result.product.title,
-                    content: result.product.content,
-                    timestamp: now,
-                    tag: result.product.tag,
-                  });
-                }
-
-                // Update marketing entries if provided by AI
-                if (result.marketing) {
-                  addMarketingEntry({
-                    id: `marketing-${entryId}`,
-                    title: result.marketing.title,
-                    content: result.marketing.content,
-                    timestamp: now,
-                    tag: result.marketing.tag,
-                  });
-                }
-
-                // Update management entries if provided by AI
-                if (result.management) {
-                  addManagementEntry({
-                    id: `management-${entryId}`,
-                    title: result.management.title,
-                    content: result.management.content,
-                    timestamp: now,
-                    tag: result.management.tag,
-                  });
+                // If there's an AI response, update specialized documents
+                if (result.aiResponse) {
+                  addEntriesFromAIResponse(result.aiResponse);
                 }
 
                 // Show notification
                 setHasNewNotification(true);
+
+                // If accepting a project, update company value
+                if (result.accepted && result.cost > 0) {
+                  setCompanyValue((prev) => Math.max(0, prev - result.cost));
+
+                  // Schedule return after delay
+                  if (result.return > 0) {
+                    setTimeout(() => {
+                      setCompanyValue((prev) => prev + result.return);
+                    }, 10000); // Return after 10 seconds
+                  }
+                }
               }}
             />
           ),
@@ -261,9 +250,21 @@ export function DocumentPhase({
         onDocumentClick={handleDocumentClick}
         onBuildSomethingClick={handleBuildSomethingClick}
         onTimelineClick={handleTimelineClick}
-        onShowProductDocument={showProductDocument}
-        onShowMarketingDocument={showMarketingDocument}
-        onShowManagementDocument={showManagementDocument}
+        onShowProductDocument={() => {
+          const doc = showProductDocument();
+          setActiveDocument(doc);
+          return doc;
+        }}
+        onShowMarketingDocument={() => {
+          const doc = showMarketingDocument();
+          setActiveDocument(doc);
+          return doc;
+        }}
+        onShowManagementDocument={() => {
+          const doc = showManagementDocument();
+          setActiveDocument(doc);
+          return doc;
+        }}
       />
       {/* Main content on the right */}
       <div className="flex-1 flex flex-col h-full min-w-0">

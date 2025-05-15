@@ -35,6 +35,7 @@ export default function Home() {
             onSolutionChange={updateUserSolution}
             onEvaluate={evaluateSolution}
             onTimerChange={updateTimer}
+            isValidating={state.isValidating} // Pass the validation state
           />
         );
 

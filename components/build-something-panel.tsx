@@ -3,40 +3,33 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-type BuildResponse = {
-  expectedEffect: "negative" | "neutral" | "positive";
-  initialCost: number;
-  monetaryReturn: number;
-  result: string;
-  title?: string; // Add title field
-  management?: { title: string; content: string; tag: string };
-  marketing?: { title: string; content: string; tag: string };
-  product?: { title: string; content: string; tag: string };
-};
+import {
+  AIResponse,
+  CardChoiceItem,
+} from "@/components/templates/templateCompontents";
 
 interface BuildSomethingPanelProps {
   onComplete: (result: {
     title: string;
     content: React.ReactNode;
-    effect: "negative" | "neutral" | "positive";
+    effect: "positive" | "neutral" | "negative";
     accepted: boolean;
     cost: number;
     return: number;
-    management?: { title: string; content: string; tag: string };
-    marketing?: { title: string; content: string; tag: string };
-    product?: { title: string; content: string; tag: string };
+    aiResponse?: AIResponse; // New prop to pass entire AI response
   }) => void;
   availableFunds: number;
+  problemStatement?: string;
 }
 
 export function BuildSomethingPanel({
   onComplete,
   availableFunds,
+  problemStatement = "",
 }: BuildSomethingPanelProps) {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [response, setResponse] = useState<BuildResponse | null>(null);
+  const [aiResponse, setAIResponse] = useState<AIResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,6 +46,13 @@ export function BuildSomethingPanel({
       );
       const businessPlan = businessPlanEl ? businessPlanEl.textContent : "";
 
+      // Get all previous build logs to provide context
+      const buildLogs = Array.from(
+        document.querySelectorAll('[data-type="market-research"]')
+      )
+        .map((el) => el.textContent)
+        .join("\n\n");
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -63,14 +63,17 @@ export function BuildSomethingPanel({
             {
               role: "system",
               content:
-                "You are an AI assistant for a business simulation game. Your role is to evaluate business decisions and generate realistic outcomes based on user input.",
+                "You are an AI assistant for a business simulation game.",
             },
             {
               role: "user",
-              content: `As a startup founder, I want to: ${prompt}. Please evaluate this business decision and provide an outcome. Also suggest a short, catchy title for this project (15 characters max).`,
+              content: `As a startup founder, I want to: ${prompt}.`,
             },
           ],
+          problemStatement: problemStatement,
+          budget: availableFunds,
           businessPlan: businessPlan,
+          buildLogs: buildLogs,
         }),
       });
 
@@ -80,22 +83,10 @@ export function BuildSomethingPanel({
       }
 
       const data = await res.json();
+      console.log("API response:", data); // Debug log
 
-      // Process the AI response into our expected format
-      const buildResponse: BuildResponse = {
-        expectedEffect: data.tone as "negative" | "neutral" | "positive",
-        initialCost: Math.floor(Math.random() * 1000) + 500, // Generate a random cost between 500-1500
-        monetaryReturn:
-          data.tone === "positive"
-            ? Math.floor(Math.random() * 3000) + 1000
-            : data.tone === "neutral"
-            ? Math.floor(Math.random() * 1000) + 500
-            : Math.floor(Math.random() * 500),
-        result: data.chat_response,
-        title: data.title || generateTitle(prompt), // Use AI title or generate one
-      };
-
-      setResponse(buildResponse);
+      // Store the AI response
+      setAIResponse(data);
     } catch (error) {
       console.error("Error calling AI endpoint:", error);
       setError("Sorry, there was an error processing your request.");
@@ -104,69 +95,95 @@ export function BuildSomethingPanel({
     }
   };
 
-  // Fallback title generator if API doesn't provide one
+  // Generate title from prompt
   const generateTitle = (prompt: string): string => {
-    // Generate a title based on the first few words of prompt
     const words = prompt.split(" ").filter((w) => w.length > 3);
     const randomIndex = Math.floor(Math.random() * Math.min(words.length, 3));
     const baseWord = words[randomIndex] || "Project";
-
-    // Add a random prefix
     const prefixes = ["Pro", "New", "Smart", "Swift", "Agile", "Next", "Rapid"];
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-
     return `${prefix} ${baseWord}`.substring(0, 15);
   };
 
   const handleAccept = () => {
-    if (!response) return;
+    if (!aiResponse) return;
 
-    // AI-generated or fallback title
-    const projectTitle = response.title || generateTitle(prompt);
-
-    onComplete({
-      title: projectTitle,
-      content: (
-        <div className="p-4">
-          <p className="font-bold mb-2">Business Decision:</p>
-          <p className="mb-4">{prompt}</p>
-          <p className="font-bold mb-2">Outcome:</p>
-          <p className="mb-2">{response.result}</p>
-          <div className="mt-4 flex justify-between text-sm">
-            <span>Investment: ${response.initialCost}</span>
-            <span>Return: ${response.monetaryReturn}</span>
-            <span
-              className={cn(
-                "font-semibold",
-                response.expectedEffect === "positive"
-                  ? "text-green-600"
-                  : response.expectedEffect === "negative"
-                  ? "text-red-600"
-                  : "text-yellow-600"
-              )}
-            >
-              {response.expectedEffect.charAt(0).toUpperCase() +
-                response.expectedEffect.slice(1)}{" "}
-              outcome
-            </span>
+    if (aiResponse.type === "rejected") {
+      // Create a notification about the rejection
+      onComplete({
+        title: "Proposal Rejected",
+        content: (
+          <div className="p-4">
+            <p className="font-bold mb-2">Business Decision (Rejected):</p>
+            <p className="mb-4">{prompt}</p>
+            <p className="font-bold mb-2">Feedback:</p>
+            <p className="text-red-600">{aiResponse.reason}</p>
           </div>
-        </div>
-      ),
-      management: response.management,
-      product: response.product,
-      marketing: response.marketing,
-      effect: response.expectedEffect,
-      accepted: true, // Mark as accepted
-      cost: response.initialCost,
-      return: response.monetaryReturn,
-    });
+        ),
+        effect: "negative",
+        accepted: false,
+        cost: 0,
+        return: 0,
+        aiResponse: aiResponse,
+      });
+    } else {
+      // For accepted proposals
+      const projectTitle = generateTitle(prompt);
+
+      // Calculate the total cost - sum of all costs or 10% of budget if no costs
+      let totalCost = 0;
+      let expectedReturn = 0;
+
+      // Try to extract costs from cardChoice components
+      aiResponse.content.forEach((doc) => {
+        if (doc.component.type === "cardChoice") {
+          doc.component.data.forEach((card) => {
+            totalCost += card.cost;
+            expectedReturn += card.budgetImpact;
+          });
+        }
+      });
+
+      // If no costs found, use default
+      if (totalCost === 0) {
+        totalCost = Math.floor(availableFunds * 0.1);
+        expectedReturn = Math.floor(totalCost * 1.5);
+      }
+
+      onComplete({
+        title: projectTitle,
+        content: (
+          <div className="p-4">
+            <p className="font-bold mb-2">Business Decision:</p>
+            <p className="mb-4">{prompt}</p>
+            <p className="font-bold mb-2">Outcome:</p>
+            <p className="mb-2">
+              Your decision has been approved. The proposed changes will be
+              applied to your business.
+            </p>
+            <div className="mt-4 flex justify-between text-sm">
+              <span>Investment: ${totalCost.toLocaleString()}</span>
+              <span>Expected Return: ${expectedReturn.toLocaleString()}</span>
+              <span className="font-semibold text-green-600">
+                Positive outcome
+              </span>
+            </div>
+          </div>
+        ),
+        effect: "positive",
+        accepted: true,
+        cost: totalCost,
+        return: expectedReturn,
+        aiResponse: aiResponse,
+      });
+    }
   };
 
   const handleDeny = () => {
-    if (!response) return;
+    if (!aiResponse) return;
 
-    // AI-generated or fallback title for denied projects too
-    const projectTitle = response.title || generateTitle(prompt);
+    // Generate title for the denied project
+    const projectTitle = generateTitle(prompt);
 
     onComplete({
       title: projectTitle,
@@ -179,22 +196,16 @@ export function BuildSomethingPanel({
           </p>
         </div>
       ),
-      management: response.management,
-      product: response.product,
-      marketing: response.marketing,
-      effect: response.expectedEffect, // Keep the effect type
-      accepted: false, // Mark as not accepted
-      cost: 0, // No cost for denied projects
+      effect: "neutral",
+      accepted: false,
+      cost: 0,
       return: 0,
+      aiResponse: aiResponse,
     });
   };
 
-  const effectColor =
-    response?.expectedEffect === "positive"
-      ? "text-green-600"
-      : response?.expectedEffect === "negative"
-      ? "text-red-600"
-      : "text-yellow-600";
+  // Determine if the proposal was accepted or rejected
+  const isRejected = aiResponse?.type === "rejected";
 
   return (
     <div className="space-y-4">
@@ -209,11 +220,11 @@ export function BuildSomethingPanel({
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Describe what you want to build or research in detail..."
           className="border rounded-md p-3 w-full h-32 resize-none"
-          disabled={isLoading || !!response}
+          disabled={isLoading || !!aiResponse}
         />
 
         <div className="flex items-center space-x-4">
-          {!response ? (
+          {!aiResponse ? (
             <button
               type="submit"
               className={cn(
@@ -237,40 +248,33 @@ export function BuildSomethingPanel({
               <button
                 type="button"
                 onClick={handleAccept}
-                className="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700"
+                className={
+                  isRejected
+                    ? "bg-orange-600 text-white px-4 py-2 rounded-md font-medium hover:bg-orange-700"
+                    : "bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700"
+                }
               >
-                Accept (${response.initialCost})
+                {isRejected ? "Acknowledge" : "Accept"}
               </button>
-              <button
-                type="button"
-                onClick={handleDeny}
-                className="bg-red-600 text-white px-4 py-2 rounded-md font-medium hover:bg-red-700"
-              >
-                Deny
-              </button>
-            </>
-          )}
 
-          {response && (
-            <span className={`ml-2 font-medium ${effectColor}`}>
-              Expected:{" "}
-              {response.expectedEffect.charAt(0).toUpperCase() +
-                response.expectedEffect.slice(1)}
-              {response.initialCost > availableFunds && (
-                <span className="text-red-600 ml-2">(Insufficient funds!)</span>
+              {!isRejected && (
+                <button
+                  type="button"
+                  onClick={handleDeny}
+                  className="bg-red-600 text-white px-4 py-2 rounded-md font-medium hover:bg-red-700"
+                >
+                  Deny
+                </button>
               )}
-            </span>
+            </>
           )}
         </div>
 
         {error && <p className="text-red-600">{error}</p>}
-
-        {!isLoading && response?.initialCost && (
-          <div className="mt-2 text-sm text-gray-600">
-            <p>Initial cost: ${response.initialCost}</p>
-            {response.monetaryReturn > 0 && (
-              <p>Potential return: ${response.monetaryReturn}</p>
-            )}
+        {aiResponse?.type === "rejected" && (
+          <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
+            <p className="font-medium text-red-700 mb-2">Proposal Rejected</p>
+            <p className="text-sm text-red-800">{aiResponse.reason}</p>
           </div>
         )}
       </form>

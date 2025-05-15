@@ -1,5 +1,7 @@
 export type AppPhase = "rules" | "problem" | "document";
 
+import { AIResponse } from "@/components/templates/templateCompontents";
+
 export interface Problem {
   id: string;
   title: string;
@@ -26,6 +28,7 @@ export interface Document {
     effect?: "positive" | "neutral" | "negative";
     cost?: number;
     return?: number;
+    aiResponse?: AIResponse; // Add the AI response to metadata
     [key: string]: any;
   };
 }
@@ -37,4 +40,5 @@ export interface AppState {
   userSolution: string;
   timer: number;
   isPassed: boolean | null;
+  isValidating: boolean;
 }

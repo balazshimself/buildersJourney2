@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Problem } from "@/types";
 import { Timer } from "@/components/ui/timer";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface ProblemPhaseProps {
   problem: Problem;
@@ -12,6 +13,7 @@ interface ProblemPhaseProps {
   onSolutionChange: (solution: string) => void;
   onEvaluate: () => void;
   onTimerChange: (time: number) => void;
+  isValidating?: boolean; // Added this prop
 }
 
 export function ProblemPhase({
@@ -21,6 +23,7 @@ export function ProblemPhase({
   onSolutionChange,
   onEvaluate,
   onTimerChange,
+  isValidating = false, // Default to false
 }: ProblemPhaseProps) {
   // Auto-submit when time runs out
   useEffect(() => {
@@ -78,19 +81,28 @@ export function ProblemPhase({
             placeholder="Write your business plan here. Be thoughtful and consider all aspects of the problem. 
             Your response will be evaluated for soundness and creativity."
             className="flex-grow p-4 border border-gray-300 rounded-md resize-none text-sm"
+            disabled={isValidating}
           />
 
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-gray-500">
               {userSolution.length} characters
             </div>
-            <Button
-              onClick={onEvaluate}
-              disabled={userSolution.trim().length === 0}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Submit Plan
-            </Button>
+
+            {isValidating ? (
+              <Button disabled className="bg-blue-600">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Evaluating...
+              </Button>
+            ) : (
+              <Button
+                onClick={onEvaluate}
+                disabled={userSolution.trim().length === 0}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Submit Plan
+              </Button>
+            )}
           </div>
         </div>
       </div>

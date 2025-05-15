@@ -1,34 +1,50 @@
 "use client";
 
 import { useState, useCallback } from "react";
-
-// Define the structure for entries in the specialized documents
-export interface DocumentEntry {
-  id: string;
-  title: string;
-  content: string;
-  timestamp: Date;
-  tag: string;
-}
+import {
+  DocumentUpdate,
+  AIResponse,
+  CardChoiceItem,
+} from "@/components/templates/templateCompontents";
+import { SpecializedDocumentView } from "@/components/templates/specializedDocumentView";
 
 export function useSpecializedDocuments() {
-  const [productEntries, setProductEntries] = useState<DocumentEntry[]>([]);
-  const [marketingEntries, setMarketingEntries] = useState<DocumentEntry[]>([]);
-  const [managementEntries, setManagementEntries] = useState<DocumentEntry[]>(
+  // Store document updates by type
+  const [marketingEntries, setMarketingEntries] = useState<DocumentUpdate[]>(
+    []
+  );
+  const [productEntries, setProductEntries] = useState<DocumentUpdate[]>([]);
+  const [managementEntries, setManagementEntries] = useState<DocumentUpdate[]>(
     []
   );
 
-  // Functions to add entries to each specialized document
-  const addProductEntry = useCallback((entry: DocumentEntry) => {
-    setProductEntries((prev) => [...prev, entry]);
-  }, []);
+  // Handler for card selection
+  const handleCardSelect = useCallback(
+    (card: CardChoiceItem, documentType: string) => {
+      console.log(`Selected card in ${documentType}:`, card);
+      // You can implement additional logic here when a card is selected
+    },
+    []
+  );
 
-  const addMarketingEntry = useCallback((entry: DocumentEntry) => {
-    setMarketingEntries((prev) => [...prev, entry]);
-  }, []);
-
-  const addManagementEntry = useCallback((entry: DocumentEntry) => {
-    setManagementEntries((prev) => [...prev, entry]);
+  // Add entries from an AI response
+  const addEntriesFromAIResponse = useCallback((response: AIResponse) => {
+    if (response.type === "accepted") {
+      // Process each update by document type
+      response.content.forEach((update) => {
+        switch (update.document) {
+          case "Marketing":
+            setMarketingEntries((prev) => [update, ...prev]);
+            break;
+          case "Product Development":
+            setProductEntries((prev) => [update, ...prev]);
+            break;
+          case "Management":
+            setManagementEntries((prev) => [update, ...prev]);
+            break;
+        }
+      });
+    }
   }, []);
 
   // Functions to create each specialized document
@@ -36,42 +52,19 @@ export function useSpecializedDocuments() {
     return {
       id: "product-document",
       type: "custom" as const,
-      title: "Product Design & Development",
+      title: "Product Development",
       content: (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Development Timeline</h3>
-          <div className="space-y-3">
-            {productEntries.length === 0 ? (
-              <div className="p-4 border border-dashed border-gray-300 rounded-md text-gray-500 text-center">
-                No product development activities yet. Use the "Build Something"
-                button to start development.
-              </div>
-            ) : (
-              productEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="p-3 bg-white rounded-md border border-gray-200 shadow-sm"
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-medium text-blue-700">{entry.title}</h4>
-                    <div>{entry.tag}</div>
-                  </div>
-                  <p className="text-sm text-gray-700 mb-2">{entry.content}</p>
-                  <p className="text-xs text-gray-500">
-                    {entry.timestamp.toLocaleString()}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <SpecializedDocumentView
+          documentType="Product Development"
+          entries={productEntries}
+          onSelectCard={handleCardSelect}
+        />
       ),
       editable: false,
       visible: true,
       createdAt: new Date(),
-      position: 0,
     };
-  }, [productEntries]);
+  }, [productEntries, handleCardSelect]);
 
   const showMarketingDocument = useCallback(() => {
     return {
@@ -79,42 +72,17 @@ export function useSpecializedDocuments() {
       type: "custom" as const,
       title: "Marketing",
       content: (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Marketing Activities</h3>
-          <div className="space-y-3">
-            {marketingEntries.length === 0 ? (
-              <div className="p-4 border border-dashed border-gray-300 rounded-md text-gray-500 text-center">
-                No marketing activities yet. Use the "Build Something" button to
-                start marketing efforts.
-              </div>
-            ) : (
-              marketingEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="p-3 bg-white rounded-md border border-gray-200 shadow-sm"
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-medium text-emerald-700">
-                      {entry.title}
-                    </h4>
-                    <div>{entry.tag}</div>
-                  </div>
-                  <p className="text-sm text-gray-700 mb-2">{entry.content}</p>
-                  <p className="text-xs text-gray-500">
-                    {entry.timestamp.toLocaleString()}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <SpecializedDocumentView
+          documentType="Marketing"
+          entries={marketingEntries}
+          onSelectCard={handleCardSelect}
+        />
       ),
       editable: false,
       visible: true,
       createdAt: new Date(),
-      position: 0,
     };
-  }, [marketingEntries]);
+  }, [marketingEntries, handleCardSelect]);
 
   const showManagementDocument = useCallback(() => {
     return {
@@ -122,52 +90,25 @@ export function useSpecializedDocuments() {
       type: "custom" as const,
       title: "Management",
       content: (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Team & Operations</h3>
-          <div className="space-y-3">
-            {managementEntries.length === 0 ? (
-              <div className="p-4 border border-dashed border-gray-300 rounded-md text-gray-500 text-center">
-                No management activities yet. Use the "Build Something" button
-                to start team building.
-              </div>
-            ) : (
-              managementEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="p-3 bg-white rounded-md border border-gray-200 shadow-sm"
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-medium text-purple-700">
-                      {entry.title}
-                    </h4>
-                    <div>{entry.tag}</div>
-                  </div>
-                  <p className="text-sm text-gray-700 mb-2">{entry.content}</p>
-                  <p className="text-xs text-gray-500">
-                    {entry.timestamp.toLocaleString()}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <SpecializedDocumentView
+          documentType="Management"
+          entries={managementEntries}
+          onSelectCard={handleCardSelect}
+        />
       ),
       editable: false,
       visible: true,
       createdAt: new Date(),
-      position: 0,
     };
-  }, [managementEntries]);
+  }, [managementEntries, handleCardSelect]);
 
   return {
-    productEntries,
-    marketingEntries,
-    managementEntries,
-    addProductEntry,
-    addMarketingEntry,
-    addManagementEntry,
+    addEntriesFromAIResponse,
     showProductDocument,
     showMarketingDocument,
     showManagementDocument,
+    marketingEntries,
+    productEntries,
+    managementEntries,
   };
 }
