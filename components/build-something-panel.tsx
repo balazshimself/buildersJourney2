@@ -63,7 +63,7 @@ export function BuildSomethingPanel({
             {
               role: "system",
               content:
-                "You are an AI assistant for a business simulation game.",
+                "You are an AI assistant for a business simulation game. Please give feedback to the user action.",
             },
             {
               role: "user",

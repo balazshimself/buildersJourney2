@@ -1,8 +1,9 @@
-// First route.ts file - fixed version
+// First route.ts file (complete)
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { micromark } from "micromark";
 
 export const runtime = "edge";
 
@@ -29,6 +30,7 @@ Here's how to respond:
   - It isn't relevant (e.g., they write a shopping list, they ramble).
   - They aren't specific enough (e.g., "I want to build a prototype," "I want to hire someone").
   - It exceeds their current budget without a clear funding plan.
+  If you reject a proposal, be sure to give ACTIONABLE feedback!
 
 Here is what to provide:
 - An assessment of whether the decision is likely to have a positive, negative, or neutral outcome.
@@ -81,57 +83,21 @@ export async function POST(req: NextRequest) {
       openAIApiKey: process.env.OPENAI_API_KEY,
     });
 
-    // Define the data structure for each template type
-    const StaticTextSchema = z.object({
-      type: z.literal("staticText"),
-      data: z.object({
-        title: z.string(),
-        text: z.string(),
-      }),
-    });
-
-    const ProgressBarSchema = z.object({
-      type: z.literal("progressBar"),
-      data: z.object({
-        label: z.string(),
-        currentValue: z.number(),
-        targetValue: z.number().nullable(),
-      }),
-    });
-
-    const CardChoiceSchema = z.object({
-      type: z.literal("cardChoice"),
-      data: z.array(
-        z.object({
-          title: z.string(),
-          description: z.string(),
-          cost: z.number(),
-          budgetImpact: z.number(),
-          effects: z.array(
-            z.object({
-              metric: z.string(),
-              change: z.number(),
-            })
-          ),
-        })
-      ),
-    });
-
-    // Define the schema for document updates
-    const DocumentUpdateSchema = z.object({
-      document: z.enum(["Marketing", "Product Development", "Management"]),
-      component: z.union([
-        StaticTextSchema,
-        ProgressBarSchema,
-        CardChoiceSchema,
-      ]),
-    });
-
-    // Define the overall response schema with discriminated union
+    // Define the schema - much simpler version without any validators
     const ResponseSchema = z.object({
-      responseType: z.enum(["accepted", "rejected"]),
+      responseType: z.string(), // "accepted" or "rejected"
       reason: z.string().nullable(),
-      content: z.array(DocumentUpdateSchema).nullable(),
+      content: z
+        .array(
+          z.object({
+            document: z.string(), // "Marketing", "Product Development", or "Management"
+            component: z.object({
+              type: z.string(), // "staticText", "progressBar", or "cardChoice"
+              data: z.any(), // Accept any data structure
+            }),
+          })
+        )
+        .nullable(),
     });
 
     const functionCallingModel = model.withStructuredOutput(ResponseSchema);
@@ -145,6 +111,19 @@ export async function POST(req: NextRequest) {
       businessPlan: businessPlan,
       buildLogs: buildLogs,
     });
+
+    // Convert markdown to HTML using micromark for text content
+    if (result.responseType === "accepted" && result.content) {
+      for (const item of result.content) {
+        if (item.component.type === "staticText" && item.component.data.text) {
+          // Convert markdown text to HTML
+          item.component.data.text = micromark(item.component.data.text);
+        }
+      }
+    } else if (result.responseType === "rejected" && result.reason) {
+      // Convert rejection reason to HTML if it contains markdown
+      result.reason = micromark(result.reason);
+    }
 
     // Transform the result to match the expected format in your application
     let finalResult;

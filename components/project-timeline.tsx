@@ -1,6 +1,7 @@
+// components/project-timeline.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GanttChart, GanttTask } from "./gantt-chart";
 import {
   Card,
@@ -10,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
+import { Calendar, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProjectTimelineProps {
@@ -23,10 +24,23 @@ export function ProjectTimeline({
   className,
 }: ProjectTimelineProps) {
   const [viewMode, setViewMode] = useState<"Day" | "Week" | "Month">("Month");
-  const [tasks, setTasks] = useState<GanttTask[]>(generateDefaultTasks());
+  const [tasks, setTasks] = useState<GanttTask[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load default tasks only when necessary
+  useEffect(() => {
+    // Only set default tasks on first render if none exist yet
+    if (!isInitialized && tasks.length === 0) {
+      setTasks([]);
+      setIsInitialized(true);
+    }
+  }, [isInitialized, tasks.length]);
 
   // Generate AI tasks based on business plan
   const generateAITasks = async () => {
+    setIsGenerating(true);
+
     try {
       // Get business plan if not provided
       const plan =
@@ -63,6 +77,8 @@ export function ProjectTimeline({
       console.error("Error generating timeline:", error);
       // Fallback to default tasks if generation fails
       setTasks(generateDefaultTasks());
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -89,6 +105,7 @@ export function ProjectTimeline({
               className={cn(
                 viewMode === "Day" && "bg-primary text-primary-foreground"
               )}
+              disabled={tasks.length === 0}
             >
               Day
             </Button>
@@ -99,6 +116,7 @@ export function ProjectTimeline({
               className={cn(
                 viewMode === "Week" && "bg-primary text-primary-foreground"
               )}
+              disabled={tasks.length === 0}
             >
               Week
             </Button>
@@ -109,6 +127,7 @@ export function ProjectTimeline({
               className={cn(
                 viewMode === "Month" && "bg-primary text-primary-foreground"
               )}
+              disabled={tasks.length === 0}
             >
               Month
             </Button>
@@ -117,20 +136,40 @@ export function ProjectTimeline({
               size="sm"
               onClick={generateAITasks}
               className="ml-4"
+              disabled={isGenerating}
             >
-              <Calendar className="h-4 w-4 mr-1" />
-              Generate Timeline
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Generate Timeline
+                </>
+              )}
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <GanttChart
-          tasks={tasks}
-          viewMode={viewMode}
-          onTaskClick={handleTaskClick}
-          className="h-[400px]"
-        />
+        {tasks.length > 0 ? (
+          <GanttChart
+            tasks={tasks}
+            viewMode={viewMode}
+            onTaskClick={handleTaskClick}
+            className="h-[400px]"
+          />
+        ) : (
+          <div className="h-[400px] flex flex-col items-center justify-center border border-dashed rounded-md">
+            <Calendar className="h-12 w-12 text-gray-300 mb-4" />
+            <p className="text-gray-500 text-center max-w-md">
+              No timeline generated yet. Click the "Generate Timeline" button to
+              create a project timeline based on your business plan.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

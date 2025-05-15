@@ -1,7 +1,9 @@
+// Second route.ts (complete)
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { micromark } from "micromark";
 
 export const runtime = "edge";
 
@@ -17,10 +19,7 @@ USER'S BUSINESS PLAN:
 Your task is to:
 1. Evaluate if this is a viable business plan that addresses the problem statement
 2. Create a formalized, well-structured version of the business plan
-3. If the plan is viable, create initial content for the three departments:
-   - Product Development
-   - Marketing
-   - Management
+3. If the plan is viable, create initial content for the three departments
 
 IMPORTANT CRITERIA:
 - Does the plan address the market gap identified in the problem?
@@ -29,8 +28,14 @@ IMPORTANT CRITERIA:
 - Does the plan have some basic structure (product, marketing, etc.)?
 - Is it specific enough to be actionable?
 
-Even if the plan is not perfect, approve it if it has basic viability and addresses the core problem.
-However, if the plan is completely insufficient, reject it.`;
+BE CRITICAL of plans that are:
+- Too vague or generic (e.g., "I will make an app")
+- Don't address the specific market gap in the problem
+- Lack a clear business model or revenue strategy
+- Are nonsensical or unrelated to the problem
+- Are extremely brief (less than 3 sentences)
+
+For inadequate plans, provide ACTIONABLE feedback so the user can improve it.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -55,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     // Define the schema for the static text component
     const StaticTextSchema = z.object({
-      type: z.literal("staticText"),
+      type: z.string(),
       data: z.object({
         title: z.string(),
         text: z.string(),
@@ -68,7 +73,7 @@ export async function POST(req: NextRequest) {
       formalizedPlan: z.string(),
       content: z.array(
         z.object({
-          document: z.enum(["Product Development", "Marketing", "Management"]),
+          document: z.string(),
           component: StaticTextSchema,
         })
       ),
@@ -94,9 +99,7 @@ export async function POST(req: NextRequest) {
 
     const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
-    const functionCallingModel = model.withStructuredOutput(ResponseSchema, {
-      name: "output_formatter",
-    });
+    const functionCallingModel = model.withStructuredOutput(ResponseSchema);
 
     const chain = prompt.pipe(functionCallingModel);
 
@@ -104,6 +107,35 @@ export async function POST(req: NextRequest) {
       problemStatement: problemStatement,
       businessPlan: businessPlan,
     });
+
+    // Convert markdown to HTML using micromark
+    if (result.result.type === "accepted") {
+      // Convert formalized plan markdown to HTML
+      result.result.formalizedPlan = micromark(result.result.formalizedPlan);
+
+      // Convert content text to HTML
+      if (result.result.content && Array.isArray(result.result.content)) {
+        for (const item of result.result.content) {
+          if (
+            item.component &&
+            item.component.type === "staticText" &&
+            item.component.data &&
+            item.component.data.text
+          ) {
+            item.component.data.text = micromark(item.component.data.text);
+          }
+        }
+      }
+    } else if (result.result.type === "rejected") {
+      // Convert rejected reason to HTML
+      if (result.result.reason) {
+        result.result.reason = micromark(result.result.reason);
+      }
+      // Convert formalized plan in rejection case as well
+      if (result.result.formalizedPlan) {
+        result.result.formalizedPlan = micromark(result.result.formalizedPlan);
+      }
+    }
 
     return NextResponse.json(result.result, { status: 200 });
   } catch (e: any) {
@@ -113,7 +145,7 @@ export async function POST(req: NextRequest) {
     const emergencyFallback = {
       type: "accepted",
       formalizedPlan:
-        "# Formalized Business Plan\n\nYour business plan has been accepted. We'll proceed with development based on your outlined strategy.",
+        "<h1>Formalized Business Plan</h1>\n<p>Your business plan has been accepted. We'll proceed with development based on your outlined strategy.</p>",
       content: [
         {
           document: "Product Development",
@@ -121,7 +153,7 @@ export async function POST(req: NextRequest) {
             type: "staticText",
             data: {
               title: "Product Development",
-              text: "Initial development phase starting now.",
+              text: "<p>Initial development phase starting now.</p>",
             },
           },
         },
@@ -131,7 +163,7 @@ export async function POST(req: NextRequest) {
             type: "staticText",
             data: {
               title: "Marketing",
-              text: "Marketing strategy in preparation.",
+              text: "<p>Marketing strategy in preparation.</p>",
             },
           },
         },
@@ -141,7 +173,7 @@ export async function POST(req: NextRequest) {
             type: "staticText",
             data: {
               title: "Management",
-              text: "Team structure being formed.",
+              text: "<p>Team structure being formed.</p>",
             },
           },
         },

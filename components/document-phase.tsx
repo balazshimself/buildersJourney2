@@ -50,9 +50,7 @@ export function DocumentPhase({
 
   // Group documents by type
   const documentsByType = {
-    main: documents.filter(
-      (doc) => doc.type === "business-plan" || doc.type === "timeline"
-    ),
+    main: documents.filter((doc) => doc.type === "business-plan"),
     buildLogs: documents.filter((doc) => doc.type === "market-research"),
   };
 
