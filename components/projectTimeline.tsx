@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { GanttChart, GanttTask } from "./gantt-chart";
+import { GanttChart, GanttTask } from "./ganttChart";
 import {
   Card,
   CardContent,

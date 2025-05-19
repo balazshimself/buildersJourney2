@@ -35,7 +35,7 @@ BE CRITICAL of plans that are:
 - Are nonsensical or unrelated to the problem
 - Are extremely brief (less than 3 sentences)
 
-For inadequate plans, provide ACTIONABLE feedback so the user can improve it.`;
+For inadequate plans, provide a few words of feedback so the user can improve it.`;
 
 export async function POST(req: NextRequest) {
   try {

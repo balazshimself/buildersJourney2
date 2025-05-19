@@ -1,9 +1,9 @@
 "use client";
 
 import { useAppState } from "@/hooks/useAppState";
-import { RulesPhase } from "@/components/rules-phase";
-import { ProblemPhase } from "@/components/problem-phase";
-import { DocumentPhase } from "@/components/document-phase";
+import { RulesPhase } from "@/components/rulesPhase";
+import { ProblemPhase } from "@/components/problemPhase";
+import { DocumentPhase } from "@/components/documentPhase";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function Home() {
@@ -35,7 +35,7 @@ export default function Home() {
             onSolutionChange={updateUserSolution}
             onEvaluate={evaluateSolution}
             onTimerChange={updateTimer}
-            isValidating={state.isValidating} // Pass the validation state
+            // isValidating={state.isValidating} // Pass the validation state
           />
         );
 

@@ -1,58 +1,44 @@
-// First route.ts file (complete)
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { micromark } from "micromark";
 
 export const runtime = "edge";
 
-const TEMPLATE = ` You are an AI assistant for a business simulation game. The player is participating in a mock business simulation where they are building a startup to solve the following problem:
+const TEMPLATE = `You are an AI assistant for a business simulation game. The player is participating in a mock interview/business simulation where they are building a startup.
 
-PROBLEM STATEMENT: {problemStatement}
+BUSINESS PLAN:
+{businessPlan}
 
-Their goal is to increase the value of their business by as much as possible.
+BUILD LOGS (Previous Actions):
+{buildLogs}
 
-BUSINESS PLAN: {businessPlan}
+Based on the player's business decision, evaluate it in the context of their existing business plan and previous actions, then provide:
 
-Their current budget is:
+1. An assessment of whether the decision is likely to have a positive, negative, or neutral outcome
+2. A realistic and detailed result of the decision (3-5 sentences)
+3. A short, catchy title for this project (max 15 characters)
+4. How this decision affects THREE key areas of the business:
+   - PRODUCT (Design/Development): Specific impacts on product features, development timeline, or technical aspects
+   - MARKETING: How this affects marketing strategy, customer acquisition, or brand positioning
+   - MANAGEMENT: Effects on team structure, operations, resource allocation, or company culture
 
-BUDGET: {budget}
+5. For each of those three categories, provide:
+   - A brief headline/title (10 words max)
+   - A 1-2 sentence impact description
+   - A tag indicating if this represents a "milestone", "update", or "risk" for that category
 
-BUILD LOGS (Previous Actions): {buildLogs}
+6. Consider factors like:
+   - Whether the decision aligns with prior build logs and business strategy
+   - If it addresses a real market need from the business plan
+   - Whether there are obvious flaws or strengths in the approach
+   - Realistic market conditions and competitive landscape
+   - The stage of the business (early startup)
 
-Based on the player's business decision, evaluate it in the context of the problem they're trying to solve, their existing business plan, current budget, and previous actions.
-Here's how to respond:
-- The information you provide should be specific and creative.
-- The player CANNOT make information up (e.g., "I have a rich friend to grant me a starting loan," "I know how to make the product myself, I don't need to hire anyone").
-- You should be ruthless in your responses if they are not providing good and specific enough ideas to keep their business afloat.
-- You can REJECT their proposal if:
-  - It isn't relevant (e.g., they write a shopping list, they ramble).
-  - They aren't specific enough (e.g., "I want to build a prototype," "I want to hire someone").
-  - It exceeds their current budget without a clear funding plan.
-  If you reject a proposal, be sure to give ACTIONABLE feedback!
+Your assessment should be balanced - not every decision needs to be perfect or terrible. Some may have mixed results.
 
-Here is what to provide:
-- An assessment of whether the decision is likely to have a positive, negative, or neutral outcome.
-- A realistic and detailed result of the decision, considering the current budget and how it affects available resources.
-- How this decision affects THREE key areas of the business:
-  - PRODUCT (Design/Development): Specific impacts on product features, development timeline, or technical aspects.
-  - MARKETING: How this affects marketing strategy, customer acquisition, or brand positioning.
-  - MANAGEMENT: Effects on team structure, operations, resource allocation, or company culture.
-
-For each of those three categories, provide:
-- A brief headline/title (max 10 words).
-- A 1-2 sentence impact description.
-- Whether this represents a "milestone," "update," or "event" for that category.
-
-Consider factors like:
-- How well the decision addresses the problem statement.
-- How it aligns with prior build logs and business strategy.
-- Whether it fits within the current budget or requires additional funding.
-- Realistic market conditions and the stage of the business.
-
-Input from player:
-{input} `;
+Player's business decision:
+{input}`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,9 +55,6 @@ export async function POST(req: NextRequest) {
     const currentMessageContent = messages[messages.length - 1].content;
 
     // Extract business plan and build logs from request if available
-    const problemStatement =
-      body.problemStatement || "No problem statement available.";
-    const budget = body.budget || "No budget available.";
     const businessPlan = body.businessPlan || "No business plan available.";
     const buildLogs = body.buildLogs || "No previous build logs available.";
 
@@ -83,65 +66,94 @@ export async function POST(req: NextRequest) {
       openAIApiKey: process.env.OPENAI_API_KEY,
     });
 
-    // Define the schema - much simpler version without any validators
-    const ResponseSchema = z.object({
-      responseType: z.string(), // "accepted" or "rejected"
-      reason: z.string().nullable(),
-      content: z
-        .array(
-          z.object({
-            document: z.string(), // "Marketing", "Product Development", or "Management"
-            component: z.object({
-              type: z.string(), // "staticText", "progressBar", or "cardChoice"
-              data: z.any(), // Accept any data structure
-            }),
-          })
-        )
-        .nullable(),
-    });
+    const schema = z
+      .object({
+        tone: z
+          .enum(["positive", "negative", "neutral"])
+          .describe(
+            "The overall expected outcome of the business decision (positive, negative, or neutral)"
+          ),
 
-    const functionCallingModel = model.withStructuredOutput(ResponseSchema);
+        initial_cost: z
+          .number()
+          .describe(
+            "The initial cost of implementing this decision (between 100-10000)"
+          ),
+
+        monetary_return: z
+          .number()
+          .describe(
+            "The expected monetary return of the action (0 if none expected)"
+          ),
+
+        chat_response: z
+          .string()
+          .describe(
+            "A detailed, specific outcome of the business decision (3-5 sentences)"
+          ),
+
+        title: z
+          .string()
+          .describe("A short, catchy title for this project (15 chars max)"),
+
+        product: z.object({
+          title: z.string().max(10).describe("Brief product update headline"),
+          content: z
+            .string()
+            .describe("1-2 sentence product impact description"),
+          tag: z
+            .enum(["milestone", "update", "risk"])
+            .describe("Type of product update"),
+        }),
+
+        marketing: z.object({
+          title: z.string().describe("Brief marketing update headline"),
+          content: z
+            .string()
+            .describe("1-2 sentence marketing impact description"),
+          tag: z
+            .enum(["milestone", "update", "risk"])
+            .describe("Type of marketing update"),
+        }),
+
+        management: z.object({
+          title: z.string().describe("Brief management update headline"),
+          content: z
+            .string()
+            .describe("1-2 sentence management impact description"),
+          tag: z
+            .enum(["milestone", "update", "risk"])
+            .describe("Type of management update"),
+        }),
+      })
+      .describe("Response format for business simulation");
+
+    const functionCallingModel = model.withStructuredOutput(schema, {
+      name: "business_simulator",
+    });
 
     const chain = prompt.pipe(functionCallingModel);
 
     const result = await chain.invoke({
-      problemStatement: problemStatement,
-      budget: budget,
       input: currentMessageContent,
       businessPlan: businessPlan,
       buildLogs: buildLogs,
     });
 
-    // Convert markdown to HTML using micromark for text content
-    if (result.responseType === "accepted" && result.content) {
-      for (const item of result.content) {
-        if (item.component.type === "staticText" && item.component.data.text) {
-          // Convert markdown text to HTML
-          item.component.data.text = micromark(item.component.data.text);
-        }
-      }
-    } else if (result.responseType === "rejected" && result.reason) {
-      // Convert rejection reason to HTML if it contains markdown
-      result.reason = micromark(result.reason);
-    }
-
-    // Transform the result to match the expected format in your application
-    let finalResult;
-    if (result.responseType === "rejected") {
-      finalResult = {
-        type: "rejected",
-        reason: result.reason,
-      };
-    } else {
-      finalResult = {
-        type: "accepted",
-        content: result.content,
-      };
-    }
-
-    return NextResponse.json(finalResult, { status: 200 });
+    return NextResponse.json(result, { status: 200 });
   } catch (e: any) {
-    console.error("Error in chat:", e);
-    return NextResponse.json({ error: e.message }, { status: e.status ?? 500 });
+    console.error("Error in chat API:", e);
+    return NextResponse.json(
+      {
+        error: e.message || "An unknown error occurred",
+        tone: "neutral",
+        title: "API Error",
+        chat_response:
+          "There was an error processing your request. Please try again with a different approach.",
+        initial_cost: 500,
+        monetary_return: 0,
+      },
+      { status: e.status || 500 }
+    );
   }
 }
