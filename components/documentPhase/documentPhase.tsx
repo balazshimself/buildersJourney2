@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Document as DocumentType } from "@/types";
 import { OptimizedTimer } from "@/components/optimizedTimer";
-import { SidebarLayout } from "@/components/sidebarLayout";
-import { DocumentEditor } from "@/components/documentEditor";
+import { SidebarLayout } from "@/components/documentPhase/sidebarLayout";
+import { DocumentEditor } from "@/components/documentPhase/documentEditor";
 import { useSpecializedDocuments } from "@/hooks/useSpecializedDocuments";
 
 interface DocumentPhaseProps {
@@ -139,7 +139,7 @@ export function DocumentPhase({
 
   const handleBuildSomethingClick = () => {
     // Import the BuildSomethingPanel component only when needed
-    import("@/components/buildSomethingPanel").then(
+    import("@/components/documentPhase/buildSomethingPanel").then(
       ({ BuildSomethingPanel }) => {
         // Get the business plan document content
         const businessPlan =

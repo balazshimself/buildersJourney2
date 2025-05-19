@@ -3,7 +3,7 @@
 import { useAppState } from "@/hooks/useAppState";
 import { RulesPhase } from "@/components/rulesPhase";
 import { ProblemPhase } from "@/components/problemPhase";
-import { DocumentPhase } from "@/components/documentPhase";
+import { DocumentPhase } from "@/components/documentPhase/documentPhase";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function Home() {
