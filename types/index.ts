@@ -2,6 +2,11 @@ export type AppPhase = "rules" | "problem" | "document";
 
 import { AIResponse } from "@/components/templates/templateCompontents";
 
+export enum ResponseTypes {
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+}
+
 export interface Problem {
   id: string;
   title: string;
@@ -11,24 +16,15 @@ export interface Problem {
 
 export interface Document {
   id: string;
-  type:
-    | "business-plan"
-    | "timeline"
-    | "notification"
-    | "market-research"
-    | "competitor-analysis"
-    | "custom"
-    | "event";
   title: string;
   content: React.ReactNode;
-  editable: boolean;
   countdown?: number;
   createdAt: Date;
   metadata?: {
     effect?: "positive" | "neutral" | "negative";
     cost?: number;
     return?: number;
-    aiResponse?: AIResponse; // Add the AI response to metadata
+    aiResponse?: AIResponse;
     [key: string]: any;
   };
 }
@@ -36,9 +32,11 @@ export interface Document {
 export interface AppState {
   currentPhase: AppPhase;
   currentProblem: Problem | null;
-  documents: Document[];
-  userSolution: string;
+  logs: Document[];
+  userInput: string;
   timer: number;
   isPassed: boolean | null;
   isValidating: boolean;
+  businessPlan: Document | null;
+  rejectionReason?: string;
 }

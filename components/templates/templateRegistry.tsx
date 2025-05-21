@@ -11,9 +11,6 @@ import {
   ProgressBarTemplate,
   CardChoiceTemplate,
   CardChoiceItem,
-  StaticTextTemplateData,
-  ProgressBarTemplateData,
-  CardChoiceTemplateData,
 } from "./templateCompontents";
 
 // Register all template components
@@ -30,15 +27,6 @@ export const createStaticTextTemplate = (
 ): TemplateData => ({
   type: "staticText",
   data: { title, text },
-});
-
-export const createProgressBarTemplate = (
-  label: string,
-  currentValue: number,
-  targetValue?: number
-): TemplateData => ({
-  type: "progressBar",
-  data: { label, currentValue, targetValue },
 });
 
 export const createCardChoiceTemplate = (
@@ -120,7 +108,6 @@ export const getDocumentCategoryColor = (category: string) => {
 // Common template types that can be used for reference
 export type TemplateRegistry = {
   StaticText: typeof createStaticTextTemplate;
-  ProgressBar: typeof createProgressBarTemplate;
   CardChoice: typeof createCardChoiceTemplate;
   CardChoiceItem: typeof createCardChoiceItem;
   render: typeof renderTemplate;
@@ -131,7 +118,6 @@ export type TemplateRegistry = {
 // Export a templates object with all factory functions
 export const templates: TemplateRegistry = {
   StaticText: createStaticTextTemplate,
-  ProgressBar: createProgressBarTemplate,
   CardChoice: createCardChoiceTemplate,
   CardChoiceItem: createCardChoiceItem,
   render: renderTemplate,

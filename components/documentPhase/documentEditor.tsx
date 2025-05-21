@@ -1,4 +1,3 @@
-// document-editor.tsx (updated)
 "use client";
 
 import React from "react";
@@ -13,7 +12,6 @@ interface DocumentEditorProps {
 export function DocumentEditor({ activeDocument }: DocumentEditorProps) {
   // Function to render content based on its type
   const renderContent = (content: any) => {
-    // If content is a React element, return it directly
     if (React.isValidElement(content)) {
       return content;
     }
@@ -37,10 +35,7 @@ export function DocumentEditor({ activeDocument }: DocumentEditorProps) {
       <div className="flex-grow flex overflow-hidden">
         {activeDocument ? (
           <div className="w-full h-full overflow-y-auto p-8">
-            <div
-              className="max-w-4xl mx-auto prose prose-sm prose-blue"
-              data-type={activeDocument.type}
-            >
+            <div className="max-w-4xl mx-auto prose prose-sm prose-blue">
               {renderContent(activeDocument.content)}
             </div>
           </div>

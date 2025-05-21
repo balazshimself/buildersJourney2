@@ -10,6 +10,7 @@ export default function Home() {
   const {
     state,
     startProblemPhase,
+    testEvaluate,
     updateUserSolution,
     evaluateSolution,
     addDocument,
@@ -30,12 +31,14 @@ export default function Home() {
         return (
           <ProblemPhase
             problem={state.currentProblem!}
-            userSolution={state.userSolution}
+            userSolution={state.userInput}
             timer={state.timer}
             onSolutionChange={updateUserSolution}
             onEvaluate={evaluateSolution}
+            testEvaluate={testEvaluate}
             onTimerChange={updateTimer}
-            // isValidating={state.isValidating} // Pass the validation state
+            rejectionReason={state.rejectionReason}
+            isValidating={state.isValidating}
           />
         );
 
@@ -43,7 +46,8 @@ export default function Home() {
         return (
           <SidebarProvider>
             <DocumentPhase
-              documents={state.documents}
+              logs={state.logs}
+              businessPlan={state.businessPlan}
               timer={state.timer}
               onUpdateDocument={updateDocument}
               onAddDocument={addDocument}

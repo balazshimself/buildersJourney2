@@ -8,7 +8,6 @@ interface OptimizedTimerProps {
   onComplete?: () => void;
   autoStart?: boolean;
   className?: string;
-  showProgress?: boolean;
   onTimeChange?: (newTime: number) => void;
 }
 
@@ -17,7 +16,6 @@ export function OptimizedTimer({
   onComplete,
   autoStart = false,
   className,
-  showProgress = true,
   onTimeChange,
 }: OptimizedTimerProps) {
   const [time, setTime] = useState(initialTime);
@@ -45,11 +43,6 @@ export function OptimizedTimer({
     return `${minutes.toString().padStart(2, "0")}:${seconds
       .toString()
       .padStart(2, "0")}`;
-  };
-
-  // Calculate progress percentage
-  const progress = () => {
-    return ((initialTime - time) / initialTime) * 100;
   };
 
   // Timer controls
@@ -121,13 +114,6 @@ export function OptimizedTimer({
     };
   }, []);
 
-  // Determine progress color based on remaining time percentage
-  const getProgressColor = () => {
-    if (progress() > 80) return "bg-red-500";
-    if (progress() > 50) return "bg-yellow-500";
-    return "bg-blue-500";
-  };
-
   return (
     <div
       className={cn("flex flex-col space-y-2", className)}
@@ -146,15 +132,6 @@ export function OptimizedTimer({
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
         )}
       </div>
-
-      {showProgress && (
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className={cn("h-full transition-all", getProgressColor())}
-            style={{ width: `${progress()}%` }}
-          />
-        </div>
-      )}
     </div>
   );
 }

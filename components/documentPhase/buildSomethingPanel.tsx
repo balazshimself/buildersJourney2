@@ -4,16 +4,21 @@ import { useState } from "react";
 import { Loader2, AlertTriangle, CheckCircle2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ResponseTypes, Document } from "@/types";
 
 type BuildResponse = {
   tone: "negative" | "neutral" | "positive";
-  initial_cost: number;
-  monetary_return: number;
-  chat_response: string;
-  title: string;
-  management: { title: string; content: string; tag: string };
-  marketing: { title: string; content: string; tag: string };
-  product: { title: string; content: string; tag: string };
+  type: ResponseTypes;
+  result: {
+    reason: string;
+    cost: number;
+    monetary_return: number;
+    chat_response: string;
+    title: string;
+    management: { title: string; content: string; tag: string };
+    marketing: { title: string; content: string; tag: string };
+    product: { title: string; content: string; tag: string };
+  };
 };
 
 interface BuildSomethingPanelProps {
@@ -29,11 +34,13 @@ interface BuildSomethingPanelProps {
     product: { title: string; content: string; tag: string };
   }) => void;
   availableFunds: number;
+  businessPlan: Document | null;
 }
 
 export function BuildSomethingPanel({
   onComplete,
   availableFunds,
+  businessPlan,
 }: BuildSomethingPanelProps) {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -48,11 +55,9 @@ export function BuildSomethingPanel({
     setError(null);
 
     try {
-      // Find business plan to include in request
-      const businessPlanEl = document.querySelector(
-        '[data-type="business-plan"]'
-      );
-      const businessPlan = businessPlanEl ? businessPlanEl.textContent : "";
+      const content = businessPlan
+        ? businessPlan.content
+        : "NO BUSINESS PLAN GIVEN";
 
       // Collect previous build logs to provide context
       const buildLogs = Array.from(
@@ -75,10 +80,10 @@ export function BuildSomethingPanel({
             },
             {
               role: "user",
-              content: `As a startup founder, I want to: ${prompt}.`,
+              content: prompt,
             },
           ],
-          businessPlan,
+          content,
           buildLogs,
         }),
       });
@@ -92,9 +97,7 @@ export function BuildSomethingPanel({
       setResponse(data);
     } catch (error) {
       console.error("Error calling AI endpoint:", error);
-      setError(
-        "Sorry, there was an error processing your request. Please try again."
-      );
+      setError("There was an error processing your request. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +107,7 @@ export function BuildSomethingPanel({
     if (!response) return;
 
     onComplete({
-      title: response.title,
+      title: response.result.title,
       content: (
         <div className="space-y-4">
           <div className="p-4 border-l-4 border-blue-500 bg-blue-50 rounded">
@@ -114,52 +117,55 @@ export function BuildSomethingPanel({
 
           <div className="p-4 border-l-4 border-green-500 bg-green-50 rounded">
             <p className="font-bold mb-2">Outcome:</p>
-            <p className="mb-2">{response.chat_response}</p>
+            <p className="mb-2">{response.result.chat_response}</p>
           </div>
 
           <div className="grid grid-cols-3 gap-4 mt-4">
             <div className="p-3 border rounded-md bg-blue-50 flex flex-col gap-1">
               <div className="flex items-center gap-1 text-xs font-semibold text-blue-700">
                 <span className="px-1.5 py-0.5 rounded bg-blue-200 text-blue-800">
-                  {response.product.tag}
+                  {response.result.product.tag}
                 </span>
                 <span>PRODUCT</span>
               </div>
-              <h4 className="font-medium text-sm">{response.product.title}</h4>
-              <p className="text-xs">{response.product.content}</p>
+              <h4 className="font-medium text-sm">
+                {response.result.product.title}
+              </h4>
+              <p className="text-xs">{response.result.product.content}</p>
             </div>
 
             <div className="p-3 border rounded-md bg-green-50 flex flex-col gap-1">
               <div className="flex items-center gap-1 text-xs font-semibold text-green-700">
                 <span className="px-1.5 py-0.5 rounded bg-green-200 text-green-800">
-                  {response.marketing.tag}
+                  {response.result.marketing.tag}
                 </span>
                 <span>MARKETING</span>
               </div>
               <h4 className="font-medium text-sm">
-                {response.marketing.title}
+                {response.result.marketing.title}
               </h4>
-              <p className="text-xs">{response.marketing.content}</p>
+              <p className="text-xs">{response.result.marketing.content}</p>
             </div>
 
             <div className="p-3 border rounded-md bg-purple-50 flex flex-col gap-1">
               <div className="flex items-center gap-1 text-xs font-semibold text-purple-700">
                 <span className="px-1.5 py-0.5 rounded bg-purple-200 text-purple-800">
-                  {response.management.tag}
+                  {response.result.management.tag}
                 </span>
                 <span>MANAGEMENT</span>
               </div>
               <h4 className="font-medium text-sm">
-                {response.management.title}
+                {response.result.management.title}
               </h4>
-              <p className="text-xs">{response.management.content}</p>
+              <p className="text-xs">{response.result.management.content}</p>
             </div>
           </div>
 
           <div className="mt-4 flex justify-between text-sm border-t pt-4">
-            <span>Investment: ${response.initial_cost.toLocaleString()}</span>
+            <span>Investment: ${response.result.cost.toLocaleString()}</span>
             <span>
-              Expected Return: ${response.monetary_return.toLocaleString()}
+              Expected Return: $
+              {response.result.monetary_return.toLocaleString()}
             </span>
             <span
               className={cn(
@@ -177,13 +183,13 @@ export function BuildSomethingPanel({
           </div>
         </div>
       ),
-      management: response.management,
-      product: response.product,
-      marketing: response.marketing,
+      management: response.result.management,
+      product: response.result.product,
+      marketing: response.result.marketing,
       effect: response.tone,
-      accepted: true, // Mark as accepted
-      cost: response.initial_cost,
-      return: response.monetary_return,
+      accepted: true,
+      cost: response.result.cost,
+      return: response.result.monetary_return,
     });
   };
 
@@ -191,7 +197,7 @@ export function BuildSomethingPanel({
     if (!response) return;
 
     onComplete({
-      title: response.title,
+      title: response.result.title,
       content: (
         <div className="p-4">
           <div className="p-4 border-l-4 border-gray-300 bg-gray-50 rounded">
@@ -204,15 +210,17 @@ export function BuildSomethingPanel({
           </div>
         </div>
       ),
-      management: response.management,
-      product: response.product,
-      marketing: response.marketing,
-      effect: response.tone, // Keep the effect type
-      accepted: false, // Mark as not accepted
-      cost: 0, // No cost for denied projects
+      management: response.result.management,
+      product: response.result.product,
+      marketing: response.result.marketing,
+      effect: response.tone,
+      accepted: false,
+      cost: 0,
       return: 0,
     });
   };
+
+  console.log("Here is the response: ", response);
 
   const getOutcomeIcon = (tone: string) => {
     switch (tone) {
@@ -228,9 +236,6 @@ export function BuildSomethingPanel({
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 p-4 rounded-md border border-blue-200 flex gap-3">
-        <div className="text-blue-500 mt-1">
-          <Loader2 className="h-5 w-5 animate-spin" />
-        </div>
         <div>
           <h3 className="font-medium text-blue-800 mb-1">Build Something</h3>
           <p className="text-sm text-blue-700">
@@ -243,65 +248,69 @@ export function BuildSomethingPanel({
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => {
+            setPrompt(e.target.value);
+            if (response) setResponse(null);
+          }}
           placeholder="I want to build..."
           className="border rounded-md p-3 w-full h-32 resize-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-          disabled={isLoading || !!response}
+          disabled={isLoading}
         />
 
-        {!response ? (
-          <Button
-            type="submit"
-            className={cn(
-              "px-4 py-2 rounded-md font-medium text-white",
-              "relative overflow-hidden bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500",
-              "hover:bg-blue-700 transition duration-200"
-            )}
-            disabled={!prompt.trim() || isLoading}
-          >
-            {isLoading ? (
-              <span className="flex items-center">
-                <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                Analyzing your business decision...
-              </span>
-            ) : (
-              "Build This!"
-            )}
-          </Button>
-        ) : (
+        <Button
+          type="submit"
+          className={cn(
+            "px-4 py-2 rounded-md font-medium text-white",
+            "relative overflow-hidden bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500",
+            "hover:bg-blue-700 transition duration-200"
+          )}
+          disabled={!prompt.trim() || isLoading || response !== null}
+        >
+          {isLoading ? (
+            <span className="flex items-center">
+              <Loader2 className="animate-spin mr-2 h-4 w-4" />
+              Analyzing your business decision...
+            </span>
+          ) : (
+            "Build!"
+          )}
+        </Button>
+
+        {response && response.type == ResponseTypes.ACCEPTED ? (
           <div className="border rounded-md p-4 bg-gray-50">
             <div className="flex items-center gap-2 mb-3">
               {getOutcomeIcon(response.tone)}
-              <h3 className="font-medium text-lg">{response.title}</h3>
+              <h3 className="font-medium text-lg">{response.result.title}</h3>
             </div>
-
-            <p className="mb-4 text-gray-700">{response.chat_response}</p>
-
             <div className="grid grid-cols-3 gap-4 mb-4 text-xs">
               <div className="p-2 border rounded bg-white">
                 <div className="text-blue-700 font-semibold">PRODUCT</div>
-                <p className="mt-1">{response.product.content}</p>
+                <p className="mt-1">{response.result.product.content}</p>
               </div>
 
               <div className="p-2 border rounded bg-white">
                 <div className="text-green-700 font-semibold">MARKETING</div>
-                <p className="mt-1">{response.marketing.content}</p>
+                <p className="mt-1">{response.result.marketing.content}</p>
               </div>
 
               <div className="p-2 border rounded bg-white">
                 <div className="text-purple-700 font-semibold">MANAGEMENT</div>
-                <p className="mt-1">{response.management.content}</p>
+                <p className="mt-1">{response.result.management.content}</p>
               </div>
             </div>
 
             <div className="flex justify-between text-sm text-gray-600 mb-4">
               <div>
                 Initial investment:{" "}
-                <span className="font-medium">${response.initial_cost}</span>
+                <span className="font-medium">
+                  ${response.result.cost + Math.floor(Math.random() * 1000)}
+                </span>
               </div>
               <div>
                 Potential return:{" "}
-                <span className="font-medium">${response.monetary_return}</span>
+                <span className="font-medium">
+                  ${response.result.monetary_return}
+                </span>
               </div>
             </div>
 
@@ -310,9 +319,9 @@ export function BuildSomethingPanel({
                 type="button"
                 onClick={handleAccept}
                 className="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 flex-1"
-                disabled={response.initial_cost > availableFunds}
+                disabled={response.result.cost > availableFunds}
               >
-                {response.initial_cost > availableFunds
+                {response.result.cost > availableFunds
                   ? "Insufficient Funds"
                   : "Accept & Implement"}
               </Button>
@@ -327,14 +336,42 @@ export function BuildSomethingPanel({
               </Button>
             </div>
 
-            {response.initial_cost > availableFunds && (
+            {response.result.cost > availableFunds && (
               <div className="mt-3 text-sm text-red-600 flex items-center gap-1">
                 <AlertTriangle className="h-4 w-4" />
-                You need ${response.initial_cost - availableFunds} more to
+                You need ${response.result.cost - availableFunds} more to
                 implement this initiative.
               </div>
             )}
           </div>
+        ) : (
+          response && (
+            <div className="mt-3 p-3 rounded bg-red-100 border border-red-400 text-red-700 text-sm font-medium flex items-center gap-2">
+              <svg
+                className="w-4 h-4 text-red-500 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 8v4m0 4h.01"
+                />
+              </svg>
+              {response.result.reason!}
+            </div>
+          )
         )}
 
         {error && (

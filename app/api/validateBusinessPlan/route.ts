@@ -1,9 +1,9 @@
-// Second route.ts (complete)
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { micromark } from "micromark";
+import { ResponseTypes } from "@/types";
 
 export const runtime = "edge";
 
@@ -26,7 +26,6 @@ IMPORTANT CRITERIA:
 - Is there a clear target audience?
 - Is there a clear revenue model?
 - Does the plan have some basic structure (product, marketing, etc.)?
-- Is it specific enough to be actionable?
 
 BE CRITICAL of plans that are:
 - Too vague or generic (e.g., "I will make an app")
@@ -35,14 +34,43 @@ BE CRITICAL of plans that are:
 - Are nonsensical or unrelated to the problem
 - Are extremely brief (less than 3 sentences)
 
-For inadequate plans, provide a few words of direct feedback so the user can improve it.`;
+For inadequate plans, provide feedback in about 5 words, extremely short and to the point, so the user can improve it. Do not exceed 5 words.`;
 
-export async function POST(req: NextRequest) {
+export interface ValidationAcceptedResponse {
+  type: ResponseTypes.ACCEPTED;
+  content: {
+    document: string;
+    component: {
+      type: string;
+      data: {
+        title: string;
+        text: string;
+      };
+    };
+  }[];
+  formalizedPlan: string;
+}
+
+export interface ValidationRejectedResponse {
+  type: ResponseTypes.REJECTED;
+  reason: string;
+}
+
+export type ValidationResponse =
+  | ValidationAcceptedResponse
+  | ValidationRejectedResponse;
+
+export async function POST(
+  req: NextRequest
+): Promise<NextResponse<ValidationResponse>> {
   try {
     // Ensure API key is set
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: "OPENAI_API_KEY is not set" },
+        {
+          type: ResponseTypes.REJECTED,
+          reason: "OpenAI key not set up correctly!",
+        },
         { status: 500 }
       );
     }
@@ -53,7 +81,10 @@ export async function POST(req: NextRequest) {
     // Validate input
     if (!problemStatement || !businessPlan) {
       return NextResponse.json(
-        { error: "Missing required fields: problemStatement, businessPlan" },
+        {
+          type: ResponseTypes.REJECTED,
+          reason: "Missing problem statement or business plan!",
+        },
         { status: 400 }
       );
     }
@@ -69,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     // Define the schema for accepted responses
     const AcceptedSchema = z.object({
-      type: z.literal("accepted"),
+      type: z.literal(ResponseTypes.ACCEPTED),
       formalizedPlan: z.string(),
       content: z.array(
         z.object({
@@ -81,9 +112,8 @@ export async function POST(req: NextRequest) {
 
     // Define the schema for rejected responses
     const RejectedSchema = z.object({
-      type: z.literal("rejected"),
+      type: z.literal(ResponseTypes.REJECTED),
       reason: z.string(),
-      formalizedPlan: z.string(),
     });
 
     // Define the overall response schema
@@ -109,7 +139,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Convert markdown to HTML using micromark
-    if (result.result.type === "accepted") {
+    if (result.result.type === ResponseTypes.ACCEPTED) {
       // Convert formalized plan markdown to HTML
       result.result.formalizedPlan = micromark(result.result.formalizedPlan);
 
@@ -126,60 +156,14 @@ export async function POST(req: NextRequest) {
           }
         }
       }
-    } else if (result.result.type === "rejected") {
-      // Convert rejected reason to HTML
-      if (result.result.reason) {
-        result.result.reason = micromark(result.result.reason);
-      }
-      // Convert formalized plan in rejection case as well
-      if (result.result.formalizedPlan) {
-        result.result.formalizedPlan = micromark(result.result.formalizedPlan);
-      }
     }
 
     return NextResponse.json(result.result, { status: 200 });
   } catch (e: any) {
     console.error("Error validating business plan:", e);
-
-    // Emergency fallback in case of complete failure
-    const emergencyFallback = {
-      type: "accepted",
-      formalizedPlan:
-        "<h1>Formalized Business Plan</h1>\n<p>Your business plan has been accepted. We'll proceed with development based on your outlined strategy.</p>",
-      content: [
-        {
-          document: "Product Development",
-          component: {
-            type: "staticText",
-            data: {
-              title: "Product Development",
-              text: "<p>Initial development phase starting now.</p>",
-            },
-          },
-        },
-        {
-          document: "Marketing",
-          component: {
-            type: "staticText",
-            data: {
-              title: "Marketing",
-              text: "<p>Marketing strategy in preparation.</p>",
-            },
-          },
-        },
-        {
-          document: "Management",
-          component: {
-            type: "staticText",
-            data: {
-              title: "Management",
-              text: "<p>Team structure being formed.</p>",
-            },
-          },
-        },
-      ],
-    };
-
-    return NextResponse.json(emergencyFallback, { status: 200 });
+    return NextResponse.json(
+      { type: ResponseTypes.REJECTED, reason: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

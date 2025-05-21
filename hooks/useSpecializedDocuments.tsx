@@ -93,7 +93,6 @@ export function useSpecializedDocuments() {
   const showProductDocument = useCallback((): DocumentType => {
     return {
       id: "product-document",
-      type: "custom" as const,
       title: "Product Design & Development",
       content: (
         <div className="space-y-6">
@@ -158,7 +157,6 @@ export function useSpecializedDocuments() {
           </div>
         </div>
       ),
-      editable: false,
       createdAt: new Date(),
     };
   }, [productEntries, productStats, getTagColor]);
@@ -166,7 +164,6 @@ export function useSpecializedDocuments() {
   const showMarketingDocument = useCallback((): DocumentType => {
     return {
       id: "marketing-document",
-      type: "custom" as const,
       title: "Marketing & Customer Acquisition",
       content: (
         <div className="space-y-6">
@@ -232,7 +229,6 @@ export function useSpecializedDocuments() {
           </div>
         </div>
       ),
-      editable: false,
       createdAt: new Date(),
     };
   }, [marketingEntries, marketingStats, getTagColor]);
@@ -240,7 +236,6 @@ export function useSpecializedDocuments() {
   const showManagementDocument = useCallback((): DocumentType => {
     return {
       id: "management-document",
-      type: "custom" as const,
       title: "Team & Operations",
       content: (
         <div className="space-y-6">
@@ -305,7 +300,6 @@ export function useSpecializedDocuments() {
           </div>
         </div>
       ),
-      editable: false,
       createdAt: new Date(),
     };
   }, [managementEntries, managementStats, getTagColor]);

@@ -5,13 +5,18 @@ import { Problem } from "@/types";
 import { OptimizedTimer } from "./optimizedTimer";
 import { Button } from "@/components/ui/button";
 
+// TODO: fix timer running out freak-out issue
+
 interface ProblemPhaseProps {
   problem: Problem;
   userSolution: string;
   timer: number;
   onSolutionChange: (solution: string) => void;
   onEvaluate: () => void;
+  testEvaluate?: () => void;
   onTimerChange: (time: number) => void;
+  rejectionReason?: string;
+  isValidating: boolean;
 }
 
 export function ProblemPhase({
@@ -20,11 +25,14 @@ export function ProblemPhase({
   timer,
   onSolutionChange,
   onEvaluate,
+  testEvaluate,
   onTimerChange,
+  rejectionReason,
+  isValidating,
 }: ProblemPhaseProps) {
   // Auto-submit when time runs out
   useEffect(() => {
-    if (timer === 0 && userSolution.trim().length > 0) {
+    if (timer === 0 && userSolution.trim().length > 0 && !isValidating) {
       onEvaluate();
     }
   }, [timer, userSolution, onEvaluate]);
@@ -37,7 +45,7 @@ export function ProblemPhase({
           <Button
             variant="outline"
             size="sm"
-            onClick={onEvaluate}
+            onClick={testEvaluate}
             className="text-sm"
           >
             Dev Skip
@@ -75,6 +83,7 @@ export function ProblemPhase({
           <textarea
             value={userSolution}
             onChange={(e) => onSolutionChange(e.target.value)}
+            disabled={isValidating}
             placeholder="Write your business plan here. Be thoughtful and consider all aspects of the problem. 
             Your response will be evaluated for soundness and creativity."
             className="flex-grow p-4 border border-gray-300 rounded-md resize-none text-sm"
@@ -85,14 +94,43 @@ export function ProblemPhase({
               {userSolution.length} characters
             </div>
             <Button
-              onClick={onEvaluate}
-              disabled={userSolution.trim().length === 0}
+              onClick={() => {
+                onEvaluate();
+              }}
+              disabled={userSolution.trim().length === 0 || isValidating}
               className="bg-blue-600 hover:bg-blue-700"
             >
               Submit Plan
             </Button>
           </div>
         </div>
+        {rejectionReason && (
+          <div className="mt-3 p-3 rounded bg-red-100 border border-red-400 text-red-700 text-sm font-medium flex items-center gap-2">
+            <svg
+              className="w-4 h-4 text-red-500 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 8v4m0 4h.01"
+              />
+            </svg>
+            {rejectionReason}
+          </div>
+        )}
       </div>
     </div>
   );

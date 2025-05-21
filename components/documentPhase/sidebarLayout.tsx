@@ -33,12 +33,9 @@ import {
 interface SidebarLayoutProps {
   companyValue: number;
   progressToTarget: number;
-  documentsByType: {
-    main: DocumentType[];
-    buildLogs: DocumentType[];
-  };
+  businessPlan: DocumentType | null;
+  logs: DocumentType[];
   activeDocument: DocumentType | null;
-  hasNewNotification: boolean;
   onDocumentClick: (doc: DocumentType) => void;
   onBuildSomethingClick: () => void;
   onTimelineClick: () => void;
@@ -48,11 +45,10 @@ interface SidebarLayoutProps {
 }
 
 export function SidebarLayout({
+  logs,
   companyValue,
-  progressToTarget,
-  documentsByType,
+  businessPlan,
   activeDocument,
-  hasNewNotification,
   onDocumentClick,
   onBuildSomethingClick,
   onTimelineClick,
@@ -84,21 +80,21 @@ export function SidebarLayout({
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <div className="mt-1 space-y-1">
-                  {documentsByType.main.map((doc) => (
+                  {businessPlan && (
                     <button
-                      key={doc.id}
+                      key={businessPlan.id}
                       className={cn(
                         "w-full px-3 py-2 text-left rounded-md text-sm flex items-center space-x-2",
-                        activeDocument?.id === doc.id
+                        activeDocument?.id === businessPlan.id
                           ? "bg-blue-50 text-blue-700"
                           : "hover:bg-gray-100"
                       )}
-                      onClick={() => onDocumentClick(doc)}
+                      onClick={() => onDocumentClick(businessPlan)}
                     >
                       <FileTextIcon className="h-4 w-4 text-gray-500" />
-                      <span>{doc.title}</span>
+                      <span>{businessPlan.title}</span>
                     </button>
-                  ))}
+                  )}
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -159,12 +155,11 @@ export function SidebarLayout({
                   <SidebarGroupContent>
                     <AccordionContent>
                       <div className="mt-1 space-y-1">
-                        {documentsByType.buildLogs.map((doc) => (
+                        {logs.map((doc) => (
                           <button
                             key={doc.id}
                             className={cn(
                               "w-full px-3 py-2 text-left rounded-md text-sm flex items-center space-x-2",
-                              !doc.editable && "opacity-75",
                               activeDocument?.id === doc.id
                                 ? "bg-blue-50 text-blue-700"
                                 : "hover:bg-gray-100"
@@ -175,7 +170,7 @@ export function SidebarLayout({
                             <span className="flex-grow truncate">
                               {doc.title}
                             </span>
-                            {!doc.editable && doc.countdown && (
+                            {doc.countdown && (
                               <span className="ml-auto text-xs text-gray-500 flex items-center">
                                 <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse mr-1"></span>
                                 {doc.countdown}s
@@ -225,11 +220,6 @@ export function SidebarLayout({
             <RocketIcon className="h-4 w-4 text-white" />
             <span>Build something!</span>
           </button>
-
-          {/* Notification indicator */}
-          {hasNewNotification && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse" />
-          )}
         </div>
 
         <button

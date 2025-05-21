@@ -1,40 +1,38 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Document as DocumentType } from "@/types";
+import { useState, useEffect, useRef } from "react";
+import { Document } from "@/types";
 import { OptimizedTimer } from "@/components/optimizedTimer";
 import { SidebarLayout } from "@/components/documentPhase/sidebarLayout";
 import { DocumentEditor } from "@/components/documentPhase/documentEditor";
 import { useSpecializedDocuments } from "@/hooks/useSpecializedDocuments";
 
 interface DocumentPhaseProps {
-  documents: DocumentType[];
+  businessPlan: Document | null;
+  logs: Document[];
   timer: number;
-  onUpdateDocument: (id: string, updates: Partial<DocumentType>) => void;
+  onUpdateDocument: (id: string, updates: Partial<Document>) => void;
   onAddDocument: (
-    document: Omit<DocumentType, "id" | "position" | "visible" | "createdAt">
+    document: Omit<Document, "id" | "position" | "visible" | "createdAt">
   ) => void;
   onRemoveDocument: (id: string) => void;
   onToggleVisibility: (id: string) => void;
   onTimerChange: (time: number) => void;
-  onAddNotification: (notification: DocumentType) => void;
+  onAddNotification: (notification: Document) => void;
 }
 
 export function DocumentPhase({
-  documents,
+  businessPlan,
+  logs: documents,
   timer,
   onUpdateDocument,
   onAddDocument,
-  onRemoveDocument,
-  onToggleVisibility,
   onTimerChange,
-  onAddNotification,
 }: DocumentPhaseProps) {
   const [companyValue, setCompanyValue] = useState(5000);
-  const [activeDocument, setActiveDocument] = useState<DocumentType | null>(
-    documents.find((doc) => doc.type === "business-plan") || null
+  const [activeDocument, setActiveDocument] = useState<Document | null>(
+    businessPlan
   );
-  const [hasNewNotification, setHasNewNotification] = useState(false);
 
   const {
     addProductEntry,
@@ -47,14 +45,6 @@ export function DocumentPhase({
 
   const intervalsRef = useRef<Record<string, NodeJS.Timeout>>({});
   const processedDocsRef = useRef<Set<string>>(new Set());
-
-  // Group documents by type
-  const documentsByType = {
-    main: documents.filter(
-      (doc) => doc.type === "business-plan" || doc.type === "timeline"
-    ),
-    buildLogs: documents.filter((doc) => doc.type === "market-research"),
-  };
 
   // Cleanup all intervals on unmount
   useEffect(() => {
@@ -69,10 +59,7 @@ export function DocumentPhase({
     // Find documents that need countdown timers (research that is accepted but not editable)
     const inProgressDocs = documents.filter(
       (doc) =>
-        doc.type === "market-research" &&
-        !doc.editable &&
-        doc.metadata?.accepted === true &&
-        !processedDocsRef.current.has(doc.id)
+        doc.metadata?.accepted === true && !processedDocsRef.current.has(doc.id)
     );
 
     inProgressDocs.forEach((doc) => {
@@ -124,7 +111,6 @@ export function DocumentPhase({
 
           onUpdateDocument(doc.id, {
             content: `# Research Results\n\nProject: ${doc.title}\n\nFindings:\n- Successfully developed initial prototype\n- Market validation shows strong interest\n- Potential revenue increase projected\n\nImpact:\nCompany value increased by $${valueChangeDisplay}`,
-            editable: true,
             countdown: undefined,
           });
         }
@@ -141,10 +127,6 @@ export function DocumentPhase({
     // Import the BuildSomethingPanel component only when needed
     import("@/components/documentPhase/buildSomethingPanel").then(
       ({ BuildSomethingPanel }) => {
-        // Get the business plan document content
-        const businessPlan =
-          documents.find((doc) => doc.type === "business-plan")?.content || "";
-
         // Create a temporary document to show the build panel
         const buildSomethingDoc = {
           id: "build-something",
@@ -153,13 +135,12 @@ export function DocumentPhase({
           content: (
             <BuildSomethingPanel
               availableFunds={companyValue}
+              businessPlan={businessPlan}
               onComplete={(result) => {
                 // Add to build logs as before
                 onAddDocument({
-                  type: "market-research",
                   title: result.title,
                   content: result.content,
-                  editable: false,
                   metadata: {
                     effect: result.effect,
                     accepted: result.accepted,
@@ -204,9 +185,6 @@ export function DocumentPhase({
                     tag: result.management.tag,
                   });
                 }
-
-                // Show notification
-                setHasNewNotification(true);
               }}
             />
           ),
@@ -241,9 +219,8 @@ export function DocumentPhase({
   };
 
   // Clear notification when clicking on a document
-  const handleDocumentClick = (doc: DocumentType) => {
+  const handleDocumentClick = (doc: Document) => {
     setActiveDocument(doc);
-    setHasNewNotification(false);
   };
 
   return (
@@ -252,9 +229,9 @@ export function DocumentPhase({
       <SidebarLayout
         companyValue={companyValue}
         progressToTarget={progressToTarget}
-        documentsByType={documentsByType}
+        logs={documents}
+        businessPlan={businessPlan}
         activeDocument={activeDocument}
-        hasNewNotification={hasNewNotification}
         onDocumentClick={handleDocumentClick}
         onBuildSomethingClick={handleBuildSomethingClick}
         onTimelineClick={handleTimelineClick}
