@@ -19,6 +19,7 @@ export default function Home() {
     toggleDocumentVisibility,
     updateTimer,
     addNotification,
+    setTimeline,
   } = useAppState();
 
   // Render appropriate phase based on current app state
@@ -49,11 +50,13 @@ export default function Home() {
               logs={state.logs}
               businessPlan={state.businessPlan}
               timer={state.timer}
+              timeline={state.timeline}
               onUpdateDocument={updateDocument}
               onAddDocument={addDocument}
               onRemoveDocument={removeDocument}
               onToggleVisibility={toggleDocumentVisibility}
               onTimerChange={updateTimer}
+              setTimeLine={setTimeline}
               onAddNotification={addNotification}
             />
           </SidebarProvider>

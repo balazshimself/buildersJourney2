@@ -1,8 +1,8 @@
 // components/project-timeline.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { GanttChart, GanttTask } from "./ganttChart/ganttChart";
+import { useState } from "react";
+import { GanttChart } from "./ganttChart/ganttChart";
 import {
   Card,
   CardContent,
@@ -13,29 +13,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GanttTask, Document } from "@/types";
 
 interface ProjectTimelineProps {
-  businessPlan?: string;
-  className?: string;
+  businessPlan: Document | null;
+  timeline: GanttTask[];
+  setTimeline: (timeline: GanttTask[]) => void;
 }
 
 export function ProjectTimeline({
-  businessPlan = "",
-  className,
+  businessPlan,
+  timeline,
+  setTimeline,
 }: ProjectTimelineProps) {
-  const [viewMode, setViewMode] = useState<"Day" | "Week" | "Month">("Month");
-  const [tasks, setTasks] = useState<GanttTask[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load default tasks only when necessary
+  // // Load default tasks only when necessary
   useEffect(() => {
     // Only set default tasks on first render if none exist yet
     if (!isInitialized && tasks.length === 0) {
-      setTasks([]);
       setIsInitialized(true);
     }
-  }, [isInitialized, tasks.length]);
+  }, [timeline]);
 
   // Generate AI tasks based on business plan
   const generateAITasks = async () => {
@@ -43,10 +42,7 @@ export function ProjectTimeline({
 
     try {
       // Get business plan if not provided
-      const plan =
-        businessPlan ||
-        document.querySelector('[data-type="business-plan"]')?.textContent ||
-        "";
+      const plan = businessPlan ?? "";
 
       // Call API to generate tasks
       const response = await fetch("/api/generate-timeline", {
@@ -71,12 +67,12 @@ export function ProjectTimeline({
           end: new Date(task.end),
         }));
 
-        setTasks(formattedTasks);
+        setTimeline(formattedTasks);
       }
     } catch (error) {
       console.error("Error generating timeline:", error);
       // Fallback to default tasks if generation fails
-      setTasks(generateDefaultTasks());
+      setTimeline(generateDefaultTasks());
     } finally {
       setIsGenerating(false);
     }
@@ -88,7 +84,7 @@ export function ProjectTimeline({
   };
 
   return (
-    <Card className={cn("w-full", className)}>
+    <Card className={cn("w-full")}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
@@ -98,39 +94,6 @@ export function ProjectTimeline({
             </CardDescription>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setViewMode("Day")}
-              className={cn(
-                viewMode === "Day" && "bg-primary text-primary-foreground"
-              )}
-              disabled={tasks.length === 0}
-            >
-              Day
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setViewMode("Week")}
-              className={cn(
-                viewMode === "Week" && "bg-primary text-primary-foreground"
-              )}
-              disabled={tasks.length === 0}
-            >
-              Week
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setViewMode("Month")}
-              className={cn(
-                viewMode === "Month" && "bg-primary text-primary-foreground"
-              )}
-              disabled={tasks.length === 0}
-            >
-              Month
-            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -154,10 +117,9 @@ export function ProjectTimeline({
         </div>
       </CardHeader>
       <CardContent>
-        {tasks.length > 0 ? (
+        {timeline.length > 0 ? (
           <GanttChart
-            tasks={tasks}
-            viewMode={viewMode}
+            tasks={timeline}
             onTaskClick={handleTaskClick}
             className="h-[400px]"
           />

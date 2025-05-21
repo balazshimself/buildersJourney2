@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Document } from "@/types";
+import { Document, GanttTask } from "@/types";
 import { OptimizedTimer } from "@/components/optimizedTimer";
 import { SidebarLayout } from "@/components/documentPhase/sidebarLayout";
 import { DocumentEditor } from "@/components/documentPhase/documentEditor";
@@ -11,6 +11,7 @@ interface DocumentPhaseProps {
   businessPlan: Document | null;
   logs: Document[];
   timer: number;
+  timeline: GanttTask[];
   onUpdateDocument: (id: string, updates: Partial<Document>) => void;
   onAddDocument: (
     document: Omit<Document, "id" | "position" | "visible" | "createdAt">
@@ -19,15 +20,18 @@ interface DocumentPhaseProps {
   onToggleVisibility: (id: string) => void;
   onTimerChange: (time: number) => void;
   onAddNotification: (notification: Document) => void;
+  setTimeLine: (timeline: GanttTask[]) => void;
 }
 
 export function DocumentPhase({
   businessPlan,
   logs: documents,
   timer,
+  timeline,
   onUpdateDocument,
   onAddDocument,
   onTimerChange,
+  setTimeLine,
 }: DocumentPhaseProps) {
   const [companyValue, setCompanyValue] = useState(5000);
   const [activeDocument, setActiveDocument] = useState<Document | null>(
@@ -200,14 +204,19 @@ export function DocumentPhase({
   };
 
   const handleTimelineClick = () => {
-    // Import the ProjectTimeline component only when needed
     import("@/components/projectTimeline").then(({ ProjectTimeline }) => {
       // Initialize the ProjectTimeline component
       const timelineDoc = {
         id: "project-timeline",
         type: "timeline" as const,
         title: "Project Timeline",
-        content: <ProjectTimeline />,
+        content: (
+          <ProjectTimeline
+            timeline={timeline}
+            businessPlan={businessPlan}
+            setTimeline={setTimeLine}
+          />
+        ),
         editable: false,
         visible: true,
         createdAt: new Date(),

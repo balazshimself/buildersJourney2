@@ -3,21 +3,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { cn } from "@/lib/utils";
+import { GanttTask } from "@/types";
 
 // Define types for the Gantt chart tasks
-export type GanttTask = {
-  id: string;
-  name: string;
-  start: Date;
-  end: Date;
-  progress: number;
-  dependencies?: string;
-  customClass?: string;
-};
 
 interface GanttChartProps {
   tasks: GanttTask[];
-  viewMode?: "Day" | "Week" | "Month";
   className?: string;
   onTaskClick?: (task: GanttTask) => void;
   onDateChange?: (task: GanttTask, start: Date, end: Date) => void;
@@ -26,7 +17,6 @@ interface GanttChartProps {
 
 export function GanttChart({
   tasks,
-  viewMode = "Month",
   className,
   onTaskClick,
   onDateChange,
@@ -48,7 +38,6 @@ export function GanttChart({
       } else {
         // Create new Gantt instance
         const gantt = new window.Gantt(containerRef.current, tasks, {
-          view_mode: viewMode,
           on_click: onTaskClick,
           on_date_change: onDateChange,
           on_progress_change: onProgressChange,
@@ -75,14 +64,7 @@ export function GanttChart({
         ganttInstanceRef.current = gantt;
       }
     }
-  }, [
-    tasks,
-    viewMode,
-    isLibraryLoaded,
-    onTaskClick,
-    onDateChange,
-    onProgressChange,
-  ]);
+  }, [tasks, isLibraryLoaded, onTaskClick, onDateChange, onProgressChange]);
 
   // Handle window resize
   useEffect(() => {

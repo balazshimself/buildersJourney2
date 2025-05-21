@@ -14,6 +14,16 @@ export interface Problem {
   marketAnalysis: string;
 }
 
+export type GanttTask = {
+  id: string;
+  name: string;
+  start: Date;
+  end: Date;
+  progress: number;
+  dependencies?: string;
+  customClass?: string;
+};
+
 export interface Document {
   id: string;
   title: string;
@@ -39,4 +49,5 @@ export interface AppState {
   isValidating: boolean;
   businessPlan: Document | null;
   rejectionReason?: string;
+  timeline: GanttTask[];
 }

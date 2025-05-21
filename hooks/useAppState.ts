@@ -13,6 +13,7 @@ const INITIAL_STATE: AppState = {
   rejectionReason: undefined,
   isPassed: null,
   isValidating: false,
+  timeline: [],
 };
 
 export const useAppState = () => {
@@ -41,6 +42,17 @@ export const useAppState = () => {
         ...state,
         userInput: solution,
       });
+    },
+    [state]
+  );
+
+  const setTimeline = useCallback(
+    (timeline: AppState["timeline"]) => {
+      setState({
+        ...state,
+        timeline,
+      });
+      console.log("Setting timeline!");
     },
     [state]
   );
@@ -217,5 +229,6 @@ export const useAppState = () => {
     toggleDocumentVisibility,
     updateTimer,
     addNotification,
+    setTimeline,
   };
 };
