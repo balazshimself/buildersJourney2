@@ -207,7 +207,7 @@ export function DocumentPhase({
     import("@/components/projectTimeline").then(({ ProjectTimeline }) => {
       // Initialize the ProjectTimeline component
       const timelineDoc = {
-        id: "project-timeline",
+        id: `project-timeline-${Date.now()}`,
         type: "timeline" as const,
         title: "Project Timeline",
         content: (

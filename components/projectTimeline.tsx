@@ -1,7 +1,7 @@
 // components/project-timeline.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GanttChart } from "./ganttChart/ganttChart";
 import {
   Card,
@@ -31,9 +31,7 @@ export function ProjectTimeline({
   // // Load default tasks only when necessary
   useEffect(() => {
     // Only set default tasks on first render if none exist yet
-    if (!isInitialized && tasks.length === 0) {
-      setIsInitialized(true);
-    }
+    console.log("update");
   }, [timeline]);
 
   // Generate AI tasks based on business plan
