@@ -1,4 +1,4 @@
-export type AppPhase = "rules" | "problem" | "document";
+export type AppPhase = "rules" | "problem" | "document" | "evaluation";
 
 import { AIResponse } from "@/components/templates/templateCompontents";
 

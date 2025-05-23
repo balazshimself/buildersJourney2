@@ -13,12 +13,10 @@ export default function Home() {
     testEvaluate,
     updateUserSolution,
     evaluateSolution,
+    startEvaluationPhase,
     addDocument,
     updateDocument,
-    removeDocument,
-    toggleDocumentVisibility,
     updateTimer,
-    addNotification,
     setTimeline,
   } = useAppState();
 
@@ -53,15 +51,14 @@ export default function Home() {
               timeline={state.timeline}
               onUpdateDocument={updateDocument}
               onAddDocument={addDocument}
-              onRemoveDocument={removeDocument}
-              onToggleVisibility={toggleDocumentVisibility}
               onTimerChange={updateTimer}
               setTimeLine={setTimeline}
-              onAddNotification={addNotification}
+              startEvaluationPhase={startEvaluationPhase}
             />
           </SidebarProvider>
         );
-
+      case "evaluation":
+        return <div>Thanks for playing! Here is your evaluation: </div>;
       default:
         return <div>Loading...</div>;
     }

@@ -16,11 +16,9 @@ interface DocumentPhaseProps {
   onAddDocument: (
     document: Omit<Document, "id" | "position" | "visible" | "createdAt">
   ) => void;
-  onRemoveDocument: (id: string) => void;
-  onToggleVisibility: (id: string) => void;
   onTimerChange: (time: number) => void;
-  onAddNotification: (notification: Document) => void;
   setTimeLine: (timeline: GanttTask[]) => void;
+  startEvaluationPhase: () => void;
 }
 
 export function DocumentPhase({
@@ -32,11 +30,13 @@ export function DocumentPhase({
   onAddDocument,
   onTimerChange,
   setTimeLine,
+  startEvaluationPhase,
 }: DocumentPhaseProps) {
   const [companyValue, setCompanyValue] = useState(5000);
   const [activeDocument, setActiveDocument] = useState<Document | null>(
     businessPlan
   );
+  const [calledEval, setCalledEval] = useState(false);
 
   const {
     addProductEntry,
@@ -57,6 +57,13 @@ export function DocumentPhase({
       intervalsRef.current = {};
     };
   }, []);
+
+  useEffect(() => {
+    if (timer === 0 && !calledEval) {
+      startEvaluationPhase();
+      setCalledEval(true);
+    }
+  }, [timer]);
 
   // Setup countdown timers for research projects
   useEffect(() => {

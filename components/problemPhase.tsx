@@ -5,8 +5,6 @@ import { Problem } from "@/types";
 import { OptimizedTimer } from "./optimizedTimer";
 import { Button } from "@/components/ui/button";
 
-// TODO: fix timer running out freak-out issue
-
 interface ProblemPhaseProps {
   problem: Problem;
   userSolution: string;
@@ -30,9 +28,8 @@ export function ProblemPhase({
   rejectionReason,
   isValidating,
 }: ProblemPhaseProps) {
-  // Auto-submit when time runs out
   useEffect(() => {
-    if (timer === 0 && userSolution.trim().length > 0 && !isValidating) {
+    if (timer === 0 && !isValidating) {
       onEvaluate();
     }
   }, [timer, userSolution, onEvaluate]);

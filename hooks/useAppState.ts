@@ -66,7 +66,7 @@ export const useAppState = () => {
         content: result.formalizedPlan,
         createdAt: new Date(),
         metadata: {
-          aiResponse: result, // Store the full AI response for reference
+          aiResponse: result,
         },
       };
 
@@ -75,12 +75,20 @@ export const useAppState = () => {
         currentPhase: "document",
         logs: [],
         businessPlan: businessPlan,
-        timer: 1800, // 30 minutes in seconds
+        timer: 100, // 30 minutes in seconds
         isValidating: false,
       });
     },
     [state]
   );
+
+  const startEvaluationPhase = useCallback(() => {
+    setState({
+      ...state,
+      currentPhase: "evaluation",
+      isValidating: false,
+    });
+  }, [state]);
 
   const testEvaluate = useCallback(async () => {
     setState((prevState) => ({
@@ -177,26 +185,6 @@ export const useAppState = () => {
     [state]
   );
 
-  const removeDocument = useCallback(
-    (id: string) => {
-      setState({
-        ...state,
-        logs: state.logs.filter((doc) => doc.id !== id),
-      });
-    },
-    [state]
-  );
-
-  const toggleDocumentVisibility = useCallback(
-    (id: string) => {
-      setState({
-        ...state,
-        logs: state.logs.map((doc) => (doc.id === id ? { ...doc } : doc)),
-      });
-    },
-    [state]
-  );
-
   const updateTimer = useCallback(
     (newTime: number) => {
       setState({
@@ -207,28 +195,16 @@ export const useAppState = () => {
     [state]
   );
 
-  const addNotification = useCallback(
-    (notification: Document) => {
-      setState({
-        ...state,
-        logs: [...state.logs, notification],
-      });
-    },
-    [state]
-  );
-
   return {
     state,
     startProblemPhase,
+    startEvaluationPhase,
     updateUserSolution: updateUserInput,
     evaluateSolution,
     testEvaluate,
     addDocument,
     updateDocument,
-    removeDocument,
-    toggleDocumentVisibility,
     updateTimer,
-    addNotification,
     setTimeline,
   };
 };
