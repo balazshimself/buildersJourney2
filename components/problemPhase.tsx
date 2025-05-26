@@ -10,11 +10,11 @@ interface ProblemPhaseProps {
   userSolution: string;
   timer: number;
   onSolutionChange: (solution: string) => void;
-  onEvaluate: () => void;
+  onEvaluate: (solution: string) => void;
   testEvaluate?: () => void;
   onTimerChange: (time: number) => void;
   rejectionReason?: string;
-  isValidating: boolean;
+  isLoading: boolean;
 }
 
 export function ProblemPhase({
@@ -26,11 +26,11 @@ export function ProblemPhase({
   testEvaluate,
   onTimerChange,
   rejectionReason,
-  isValidating,
+  isLoading: isValidating,
 }: ProblemPhaseProps) {
   useEffect(() => {
     if (timer === 0 && !isValidating) {
-      onEvaluate();
+      onEvaluate(userSolution);
     }
   }, [timer, userSolution, onEvaluate]);
 
@@ -50,7 +50,7 @@ export function ProblemPhase({
           <OptimizedTimer
             initialTime={timer}
             autoStart={true}
-            onComplete={onEvaluate}
+            onComplete={() => onEvaluate(userSolution)}
             onTimeChange={onTimerChange}
             className="min-w-28"
           />
@@ -92,7 +92,7 @@ export function ProblemPhase({
             </div>
             <Button
               onClick={() => {
-                onEvaluate();
+                onEvaluate(userSolution);
               }}
               disabled={userSolution.trim().length === 0 || isValidating}
               className="bg-blue-600 hover:bg-blue-700"

@@ -1,6 +1,9 @@
 export type AppPhase = "rules" | "problem" | "document" | "evaluation";
 
-import { AIResponse } from "@/components/templates/templateCompontents";
+import {
+  AIResponse,
+  CardComponent,
+} from "@/components/templates/templateCompontents";
 
 export enum ResponseTypes {
   ACCEPTED = "accepted",
@@ -42,12 +45,14 @@ export interface Document {
 export interface AppState {
   currentPhase: AppPhase;
   currentProblem: Problem | null;
+  marketingCards: CardComponent[];
+  productCards: CardComponent[];
+  managementCards: CardComponent[];
   logs: Document[];
-  userInput: string;
-  timer: number;
-  isPassed: boolean | null;
-  isValidating: boolean;
-  businessPlan: Document | null;
   rejectionReason?: string;
+  timer: number;
+  isLoading: boolean;
+  businessPlan: Document | null;
   timeline: GanttTask[];
+  companyValue: number;
 }

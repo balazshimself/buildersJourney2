@@ -3,13 +3,13 @@ import {
   AIResponse,
   DocumentUpdate,
   TemplateRenderer,
-  CardChoiceItem,
+  ChoiceItem,
 } from "@/components/templates/templateCompontents";
 
 interface SpecializedDocumentViewProps {
   documentType: "Marketing" | "Product Development" | "Management";
   entries: DocumentUpdate[];
-  onSelectCard?: (card: CardChoiceItem, documentType: string) => void;
+  onSelectCard?: (card: ChoiceItem, documentType: string) => void;
 }
 
 export function SpecializedDocumentView({

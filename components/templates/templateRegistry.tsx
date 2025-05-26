@@ -5,12 +5,12 @@
 
 import React from "react";
 import {
-  TemplateData,
+  CardComponent,
   TemplateRenderer,
   StaticTextTemplate,
   ProgressBarTemplate,
   CardChoiceTemplate,
-  CardChoiceItem,
+  ChoiceItem,
 } from "./templateCompontents";
 
 // Register all template components
@@ -24,14 +24,14 @@ const templateComponents = {
 export const createStaticTextTemplate = (
   title: string,
   text: string
-): TemplateData => ({
+): CardComponent => ({
   type: "staticText",
   data: { title, text },
 });
 
 export const createCardChoiceTemplate = (
-  cards: CardChoiceItem[]
-): TemplateData => ({
+  cards: ChoiceItem[]
+): CardComponent => ({
   type: "cardChoice",
   data: cards,
 });
@@ -42,7 +42,7 @@ export const createCardChoiceItem = (
   cost: number,
   budgetImpact: number,
   effects: { metric: string; change: number }[] = []
-): CardChoiceItem => ({
+): ChoiceItem => ({
   title,
   description,
   cost,
@@ -52,8 +52,8 @@ export const createCardChoiceItem = (
 
 // Helper to render any template by type and data
 export const renderTemplate = (
-  template: TemplateData,
-  onSelectCard?: (card: CardChoiceItem) => void,
+  template: CardComponent,
+  onSelectCard?: (card: ChoiceItem) => void,
   className?: string
 ) => {
   return (

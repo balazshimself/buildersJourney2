@@ -220,8 +220,6 @@ export function BuildSomethingPanel({
     });
   };
 
-  console.log("Here is the response: ", response);
-
   const getOutcomeIcon = (tone: string) => {
     switch (tone) {
       case "positive":

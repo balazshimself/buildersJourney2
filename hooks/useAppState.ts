@@ -5,15 +5,17 @@ import { ValidationResponse } from "@/app/api/validateBusinessPlan/route";
 
 const INITIAL_STATE: AppState = {
   currentPhase: "rules",
+  marketingCards: [],
+  managementCards: [],
+  productCards: [],
   currentProblem: null,
   businessPlan: null,
   logs: [],
-  userInput: "",
   timer: 0,
   rejectionReason: undefined,
-  isPassed: null,
-  isValidating: false,
+  isLoading: false,
   timeline: [],
+  companyValue: 5000,
 };
 
 export const useAppState = () => {
@@ -30,21 +32,9 @@ export const useAppState = () => {
       currentPhase: "problem",
       currentProblem: selectedProblem,
       timer: 300, // 5 minutes in seconds
-      userInput: "",
-      isPassed: null,
-      isValidating: false,
+      isLoading: false,
     });
   }, [state]);
-
-  const updateUserInput = useCallback(
-    (solution: string) => {
-      setState({
-        ...state,
-        userInput: solution,
-      });
-    },
-    [state]
-  );
 
   const setTimeline = useCallback(
     (timeline: AppState["timeline"]) => {
@@ -75,8 +65,8 @@ export const useAppState = () => {
         currentPhase: "document",
         logs: [],
         businessPlan: businessPlan,
-        timer: 100, // 30 minutes in seconds
-        isValidating: false,
+        timer: 1000, // 30 minutes in seconds
+        isLoading: false,
       });
     },
     [state]
@@ -86,14 +76,14 @@ export const useAppState = () => {
     setState({
       ...state,
       currentPhase: "evaluation",
-      isValidating: false,
+      isLoading: false,
     });
   }, [state]);
 
   const testEvaluate = useCallback(async () => {
     setState((prevState) => ({
       ...prevState,
-      isValidating: true,
+      isLoading: true,
     }));
 
     try {
@@ -108,54 +98,57 @@ export const useAppState = () => {
     } catch {}
   }, [state, startDocumentPhase]);
 
-  const evaluateSolution = useCallback(async () => {
-    // Set validating state
-    setState((prevState) => ({
-      ...prevState,
-      isValidating: true,
-    }));
-
-    try {
-      // Call API to validate business plan
-      const response = await fetch("/api/validateBusinessPlan", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          problemStatement: state.currentProblem?.marketAnalysis || "",
-          businessPlan: state.userInput,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to validate business plan");
-      }
-
-      const result: ValidationResponse = await response.json();
-
-      // Check if the plan was rejected
-      if (result.type === "accepted") {
-        startDocumentPhase(result);
-      } else {
-        // if not accepted
-        setState((prevState) => ({
-          ...prevState,
-          isValidating: false,
-          rejectionReason: result.reason,
-          timer: prevState.timer + 60,
-        }));
-      }
-    } catch (error) {
-      console.error("Error validating solution:", error);
+  const evaluateSolution = useCallback(
+    async (userInput: string) => {
+      // Set validating state
       setState((prevState) => ({
         ...prevState,
-        isValidating: false,
-        rejectionReason: "Failed to fetch AI response! Please try again.",
-        timer: prevState.timer,
+        isLoading: true,
       }));
-    }
-  }, [state, startDocumentPhase]);
+
+      try {
+        // Call API to validate business plan
+        const response = await fetch("/api/validateBusinessPlan", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            problemStatement: state.currentProblem?.marketAnalysis || "",
+            businessPlan: userInput,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to validate business plan");
+        }
+
+        const result: ValidationResponse = await response.json();
+
+        // Check if the plan was rejected
+        if (result.type === "accepted") {
+          startDocumentPhase(result);
+        } else {
+          // if not accepted
+          setState((prevState) => ({
+            ...prevState,
+            isLoading: false,
+            rejectionReason: result.reason,
+            timer: prevState.timer + 60,
+          }));
+        }
+      } catch (error) {
+        console.error("Error validating solution:", error);
+        setState((prevState) => ({
+          ...prevState,
+          isLoading: false,
+          rejectionReason: "Failed to fetch AI response! Please try again.",
+          timer: prevState.timer,
+        }));
+      }
+    },
+    [state, startDocumentPhase]
+  );
 
   const addDocument = useCallback(
     (document: Omit<Document, "id" | "visible" | "createdAt">) => {
@@ -199,7 +192,6 @@ export const useAppState = () => {
     state,
     startProblemPhase,
     startEvaluationPhase,
-    updateUserSolution: updateUserInput,
     evaluateSolution,
     testEvaluate,
     addDocument,

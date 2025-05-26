@@ -2,22 +2,88 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Document as DocumentType } from "@/types";
+import {
+  CardChoiceTemplate,
+  ProgressBarTemplate,
+} from "@/components/templates/templateCompontents";
 
 // Define the structure for entries in the specialized documents
 export interface DocumentEntry {
   id: string;
   title: string;
-  content: string;
+  content: React.ReactNode;
   timestamp: Date;
   tag: string;
 }
 
 export function useSpecializedDocuments() {
-  const [productEntries, setProductEntries] = useState<DocumentEntry[]>([]);
   const [marketingEntries, setMarketingEntries] = useState<DocumentEntry[]>([]);
   const [managementEntries, setManagementEntries] = useState<DocumentEntry[]>(
     []
   );
+
+  const progressBarExample = (
+    <ProgressBarTemplate
+      data={{
+        label: "Prototype creation",
+        checkpointData: [
+          "Figure out wtf",
+          "Iteration",
+          "???",
+          "Sourcing components",
+          "Profit",
+        ],
+        currentCheckpointIndex: 0,
+        reward: "1000$",
+      }}
+    />
+  );
+
+  const cardChoiceTemplate = (
+    <CardChoiceTemplate
+      data={{
+        title: "Hire choice",
+        description: "Choose who to hire!",
+        cards: [
+          {
+            id: "candidate-1",
+            title: "Alice Johnson",
+            description:
+              "Experienced frontend developer with a passion for UI/UX.",
+            buttonString: "Hire Alice",
+          },
+          {
+            id: "candidate-2",
+            title: "Bob Smith",
+            description: "Backend engineer specializing in scalable APIs.",
+            buttonString: "Hire Bob",
+          },
+          {
+            id: "candidate-3",
+            title: "Carol Lee",
+            description: "Full-stack developer and agile team leader.",
+            buttonString: "Hire Carol",
+          },
+        ],
+      }}
+    />
+  );
+  const [productEntries, setProductEntries] = useState<DocumentEntry[]>([
+    {
+      id: "progress-bar-example",
+      title: "Prototype Progress",
+      content: progressBarExample,
+      timestamp: new Date(),
+      tag: "milestone",
+    },
+    {
+      id: "progress-bar-example",
+      title: "I need to have a TP",
+      content: cardChoiceTemplate,
+      timestamp: new Date(),
+      tag: "event",
+    },
+  ]);
 
   // Functions to add entries to each specialized document
   const addProductEntry = useCallback((entry: DocumentEntry) => {
