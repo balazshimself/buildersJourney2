@@ -1,58 +1,25 @@
 import React from "react";
-import { TemplateTemplate } from "../documentPhase/buildSomethingPanel";
-
-// Define TypeScript types for the template components
-export type StaticTextTemplateData = {
-  title: string;
-  text: string;
-};
-
-export type ProgressBarTemplateData = {
-  title: string;
-  checkpointData: string[];
-  currentCheckpointIndex: number;
-  reward: string;
-};
-
-export type ChoiceItem = {
-  title: string;
-  description: string;
-  buttonString: string;
-};
-
-export type ChoiceTemplateData = {
-  title: string;
-  description: string;
-  cards: {
-    title: string;
-    description: string;
-    buttonString: string;
-  }[];
-};
-
-export type CardComponent =
-  | { type: "static_text"; data: StaticTextTemplateData }
-  | { type: "progress_bar"; data: ProgressBarTemplateData }
-  | { type: "card_choice"; data: ChoiceTemplateData };
-
-export type DocumentUpdate = {
-  document: "Marketing" | "Product Development" | "Management";
-  component: CardComponent;
-};
-
-export type AIResponse =
-  | { type: "rejected"; reason: string }
-  | { type: "accepted"; content: DocumentUpdate[] };
+import {
+  CardChoiceTemplateData,
+  CardComponent,
+  CardData,
+  ProgressBarTemplateData,
+  StaticTextTemplateData,
+  TemplateType,
+} from "../../types/templates";
 
 // Static Text Template Component
 export const StaticTextTemplate: React.FC<{
   data: StaticTextTemplateData;
   className?: string;
 }> = ({ data, className }) => {
+  const { title, text } = data.data;
   return (
     <div className={`p-4 rounded-lg border bg-white shadow-sm ${className}`}>
-      <h3 className="text-lg font-semibold mb-2">{data.title}</h3>
-      <p className="text-sm text-gray-700 whitespace-pre-line">{data.text}</p>
+      <h3 className="text-lg font-semibold mb-2">{title ?? "NO TITLE"}</h3>
+      <p className="text-sm text-gray-700 whitespace-pre-line">
+        {text ?? "NO DESCRIPTION"}
+      </p>
     </div>
   );
 };
@@ -62,8 +29,13 @@ export const ProgressBarTemplate: React.FC<{
   data: ProgressBarTemplateData;
   className?: string;
 }> = ({ data, className }) => {
-  const { title, checkpointData, currentCheckpointIndex, reward } = data;
-  const totalCheckpoints = checkpointData.length;
+  const {
+    title,
+    checkpointData,
+    currentCheckpointIndex = 0,
+    reward,
+  } = data.data;
+  const totalCheckpoints = checkpointData ? checkpointData.length : 0;
 
   return (
     <div className={`p-4 rounded-lg border bg-white shadow-sm ${className}`}>
@@ -75,7 +47,8 @@ export const ProgressBarTemplate: React.FC<{
       </div>
       <div className="flex items-center mb-2">
         <span className="text-xs text-gray-500">
-          Next task: {checkpointData[currentCheckpointIndex] || ""}
+          Next task:{" "}
+          {checkpointData ? checkpointData[currentCheckpointIndex] : ""}
         </span>
       </div>
       <div className="flex space-x-1 mb-1">
@@ -98,18 +71,22 @@ export const ProgressBarTemplate: React.FC<{
 
 // Card Choice Template Component
 export const CardChoiceTemplate: React.FC<{
-  data: ChoiceTemplateData;
-  onSelectCard?: (card: ChoiceItem) => void;
+  data: CardChoiceTemplateData;
+  onSelectCard?: (card: CardData) => void;
   className?: string;
 }> = ({ data, onSelectCard, className }) => {
+  const { title, description, cards = [] } = data.data;
+
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="mb-4 border-b pb-2">
-        <h2 className="text-xl font-bold mb-1">{data.title}</h2>
-        <p className="text-base text-gray-600">{data.description}</p>
+        <h2 className="text-xl font-bold mb-1">{title ?? "NO TITLE"}</h2>
+        <p className="text-base text-gray-600">
+          {description ?? "NO DESCRIPTION"}
+        </p>
       </div>
       <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-4 overflow-x-auto">
-        {data.cards.map((card, index) => (
+        {cards.map((card, index) => (
           <div
             key={index}
             className="p-4 rounded-lg border bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer min-w-[220px]"
@@ -132,24 +109,19 @@ export const CardChoiceTemplate: React.FC<{
 
 // Template Renderer - renders the appropriate template based on type
 export const TemplateRenderer: React.FC<{
-  template: TemplateTemplate;
-  onSelectCard?: (card: ChoiceItem) => void;
+  template: CardComponent;
+  onSelectCard?: (card: CardData) => void;
   className?: string;
 }> = ({ template, onSelectCard, className }) => {
   switch (template.type) {
-    case "static_text":
-      return <StaticTextTemplate data={template.data} className={className} />;
-    case "progress_bar":
-      return (
-        <ProgressBarTemplate
-          data={{ ...template.data, currentCheckpointIndex: 0 }}
-          className={className}
-        />
-      );
-    case "card_choice":
+    case TemplateType.StaticText:
+      return <StaticTextTemplate data={template} className={className} />;
+    case TemplateType.ProgressBar:
+      return <ProgressBarTemplate data={template} className={className} />;
+    case TemplateType.CardChoice:
       return (
         <CardChoiceTemplate
-          data={template.data}
+          data={template}
           onSelectCard={onSelectCard}
           className={className}
         />

@@ -5,58 +5,22 @@ import { Loader2, AlertTriangle, CheckCircle2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ResponseTypes, Document } from "@/types";
-import {
-  CardChoiceTemplate,
-  CardComponent,
-  ProgressBarTemplate,
-  StaticTextTemplate,
-} from "../templates/templateCompontents";
 import { TemplateRenderer } from "../templates/templateCompontents";
+import { CardComponent } from "@/types/templates";
 
-type StaticTextTemplate = {
-  type: "static_text";
-  data: {
-    title: string;
-    text: string;
-  };
+export type DocumentUpdate = {
+  document: "Marketing" | "Product Development" | "Management";
+  component: CardComponent;
 };
 
-type ProgressBarTemplate = {
-  type: "progress_bar";
-  data: {
-    title: string;
-    checkpointData: string[];
-    reward: string;
-  };
-};
-
-type CardChoiceCard = {
-  title: string;
-  description: string;
-  buttonString: string;
-};
-type CardChoiceTemplate = {
-  type: "card_choice";
-  data: {
-    title: string;
-    description: string;
-    cards: CardChoiceCard[];
-  };
-};
-
-export type TemplateTemplate =
-  | CardChoiceTemplate
-  | StaticTextTemplate
-  | ProgressBarTemplate;
-
-type BuildResponse = {
+export type BuildResponse = {
   tone: "negative" | "neutral" | "positive";
   type: ResponseTypes;
   result: {
     reason?: string;
-    marketing?: StaticTextTemplate | ProgressBarTemplate | CardChoiceTemplate;
-    product?: StaticTextTemplate | ProgressBarTemplate | CardChoiceTemplate;
-    management?: StaticTextTemplate | ProgressBarTemplate | CardChoiceTemplate;
+    marketing?: CardComponent;
+    product?: CardComponent;
+    management?: CardComponent;
     log: {
       title: string;
       content: string;

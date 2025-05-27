@@ -7,6 +7,7 @@ import {
   ProgressBarTemplate,
   StaticTextTemplate,
 } from "@/components/templates/templateCompontents";
+import { TemplateType } from "@/types/templates";
 
 export function useSpecializedDocuments() {
   const [marketingEntries, setMarketingEntries] = useState<
@@ -19,43 +20,61 @@ export function useSpecializedDocuments() {
   const progressBarExample = (
     <ProgressBarTemplate
       data={{
-        title: "Prototype creation",
-        checkpointData: [
-          "Figure out wtf",
-          "Iteration",
-          "???",
-          "Sourcing components",
-          "Profit",
-        ],
-        currentCheckpointIndex: 0,
-        reward: "1000$",
+        type: TemplateType.ProgressBar,
+        data: {
+          title: "Prototype creation",
+          checkpointData: [
+            "Figure out wtf",
+            "Iteration",
+            "???",
+            "Sourcing components",
+            "Profit",
+          ],
+          currentCheckpointIndex: 0,
+          reward: "1000$",
+        },
       }}
     />
   );
 
-  const cardChoiceTemplate = (
+  const staticTextExample = (
+    <StaticTextTemplate
+      data={{
+        type: TemplateType.StaticText,
+        data: {
+          title: "Risk: Supply Chain Delay",
+          text: "There is a potential delay in sourcing key components due to global supply chain issues. Mitigation plan: identify alternative suppliers and adjust project timeline accordingly.",
+        },
+      }}
+    />
+  );
+
+  const cardChoiceTemplate: React.ReactElement = (
     <CardChoiceTemplate
       data={{
-        title: "Hire choice",
-        description: "Choose who to hire!",
-        cards: [
-          {
-            title: "Alice Johnson",
-            description:
-              "Experienced frontend developer with a passion for UI/UX.",
-            buttonString: "Hire Alice",
-          },
-          {
-            title: "Bob Smith",
-            description: "Backend engineer specializing in scalable APIs.",
-            buttonString: "Hire Bob",
-          },
-          {
-            title: "Carol Lee",
-            description: "Full-stack developer and agile team leader.",
-            buttonString: "Hire Carol",
-          },
-        ],
+        type: TemplateType.CardChoice,
+        data: {
+          title: "Hire choice",
+          description: "Choose who to hire!",
+          cards: [
+            {
+              title: "Alice Johnson",
+              description:
+                "Experienced frontend developer with a passion for UI/UX.",
+              buttonString: "Hire Alice",
+            },
+            {
+              title: "Bob Smith",
+              description: "Backend engineer specializing in scalable APIs.",
+              buttonString: "Hire Bob",
+            },
+            {
+              title: "Carol Lee",
+              description: "Full-stack developer and agile team leader.",
+              buttonString: "Hire Carol",
+            },
+          ],
+        },
       }}
     />
   );

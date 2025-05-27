@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ResponseTypes } from "@/types";
+import { TemplateType } from "@/types/templates";
 
 export const runtime = "edge";
 
@@ -142,7 +143,9 @@ export async function POST(req: NextRequest) {
 
     const StaticTextTemplate = z
       .object({
-        type: z.literal("static_text").describe("Type of the template"),
+        type: z
+          .literal(TemplateType.StaticText)
+          .describe("Type of the template"),
         title: z.string().describe("Title of the static text card"),
         text: z.string().describe("Content of the static text card"),
       })
@@ -150,7 +153,9 @@ export async function POST(req: NextRequest) {
 
     const ProgressBarTemplate = z
       .object({
-        type: z.literal("progress_bar").describe("Type of the template"),
+        type: z
+          .literal(TemplateType.ProgressBar)
+          .describe("Type of the template"),
         title: z.string().describe("Title of the progress bar card"),
         checkpointData: z
           .array(z.string())
@@ -163,7 +168,9 @@ export async function POST(req: NextRequest) {
 
     const ChoiceTemplate = z
       .object({
-        type: z.literal("card_choice").describe("Type of the template"),
+        type: z
+          .literal(TemplateType.CardChoice)
+          .describe("Type of the template"),
         title: z.string().describe("Title of the choice card"),
         description: z.string().describe("Description of the choice card"),
         cards: z

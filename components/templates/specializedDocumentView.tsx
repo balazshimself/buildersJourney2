@@ -1,14 +1,12 @@
 import React from "react";
-import {
-  DocumentUpdate,
-  TemplateRenderer,
-  ChoiceItem,
-} from "@/components/templates/templateCompontents";
+import { TemplateRenderer } from "@/components/templates/templateCompontents";
+import { DocumentUpdate } from "../documentPhase/buildSomethingPanel";
+import { CardData } from "@/types/templates";
 
 interface SpecializedDocumentViewProps {
   documentType: "Marketing" | "Product Development" | "Management";
   entries: DocumentUpdate[];
-  onSelectCard?: (card: ChoiceItem, documentType: string) => void;
+  onSelectCard?: (card: CardData, documentType: string) => void;
 }
 
 export function SpecializedDocumentView({

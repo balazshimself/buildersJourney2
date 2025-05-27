@@ -1,9 +1,6 @@
-export type AppPhase = "rules" | "problem" | "document" | "evaluation";
+import { CardComponent } from "./templates";
 
-import {
-  AIResponse,
-  CardComponent,
-} from "@/components/templates/templateCompontents";
+export type AppPhase = "rules" | "problem" | "document" | "evaluation";
 
 export enum ResponseTypes {
   ACCEPTED = "accepted",
@@ -37,7 +34,6 @@ export interface Document {
     effect?: "positive" | "neutral" | "negative";
     cost?: number;
     return?: number;
-    aiResponse?: AIResponse;
     [key: string]: any;
   };
 }
