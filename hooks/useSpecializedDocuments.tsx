@@ -21,18 +21,16 @@ export function useSpecializedDocuments() {
     <ProgressBarTemplate
       data={{
         type: TemplateType.ProgressBar,
-        data: {
-          title: "Prototype creation",
-          checkpointData: [
-            "Figure out wtf",
-            "Iteration",
-            "???",
-            "Sourcing components",
-            "Profit",
-          ],
-          currentCheckpointIndex: 0,
-          reward: "1000$",
-        },
+        title: "Prototype creation",
+        checkpointData: [
+          "Figure out wtf",
+          "Iteration",
+          "???",
+          "Sourcing components",
+          "Profit",
+        ],
+        currentCheckpointIndex: 0,
+        reward: "1000$",
       }}
     />
   );
@@ -41,10 +39,8 @@ export function useSpecializedDocuments() {
     <StaticTextTemplate
       data={{
         type: TemplateType.StaticText,
-        data: {
-          title: "Risk: Supply Chain Delay",
-          text: "There is a potential delay in sourcing key components due to global supply chain issues. Mitigation plan: identify alternative suppliers and adjust project timeline accordingly.",
-        },
+        title: "Risk: Supply Chain Delay",
+        text: "There is a potential delay in sourcing key components due to global supply chain issues. Mitigation plan: identify alternative suppliers and adjust project timeline accordingly.",
       }}
     />
   );
@@ -53,28 +49,26 @@ export function useSpecializedDocuments() {
     <CardChoiceTemplate
       data={{
         type: TemplateType.CardChoice,
-        data: {
-          title: "Hire choice",
-          description: "Choose who to hire!",
-          cards: [
-            {
-              title: "Alice Johnson",
-              description:
-                "Experienced frontend developer with a passion for UI/UX.",
-              buttonString: "Hire Alice",
-            },
-            {
-              title: "Bob Smith",
-              description: "Backend engineer specializing in scalable APIs.",
-              buttonString: "Hire Bob",
-            },
-            {
-              title: "Carol Lee",
-              description: "Full-stack developer and agile team leader.",
-              buttonString: "Hire Carol",
-            },
-          ],
-        },
+        title: "Hire choice",
+        description: "Choose who to hire!",
+        cards: [
+          {
+            title: "Alice Johnson",
+            description:
+              "Experienced frontend developer with a passion for UI/UX.",
+            buttonString: "Hire Alice",
+          },
+          {
+            title: "Bob Smith",
+            description: "Backend engineer specializing in scalable APIs.",
+            buttonString: "Hire Bob",
+          },
+          {
+            title: "Carol Lee",
+            description: "Full-stack developer and agile team leader.",
+            buttonString: "Hire Carol",
+          },
+        ],
       }}
     />
   );
@@ -221,8 +215,11 @@ export function useSpecializedDocuments() {
                 </p>
               </div>
             ) : (
-              productEntries.map((entry) => (
-                <div className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              productEntries.map((entry, index) => (
+                <div
+                  key={`product-entry-${index}-${entry.timestamp.getTime()}`}
+                  className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                >
                   <div className="flex justify-between items-start mb-2">
                     <span
                       className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
@@ -299,8 +296,11 @@ export function useSpecializedDocuments() {
                 </p>
               </div>
             ) : (
-              marketingEntries.map((entry) => (
-                <div className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              marketingEntries.map((entry, index) => (
+                <div
+                  key={`product-entry-${index}-${entry.timestamp.getTime()}`}
+                  className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                >
                   <div className="flex justify-between items-start mb-2">
                     <span
                       className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
@@ -376,8 +376,11 @@ export function useSpecializedDocuments() {
                 </p>
               </div>
             ) : (
-              managementEntries.map((entry) => (
-                <div className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              managementEntries.map((entry, index) => (
+                <div
+                  key={`product-entry-${index}-${entry.timestamp.getTime()}`}
+                  className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                >
                   <div className="flex justify-between items-start mb-2">
                     <span
                       className={`text-xs px-2 py-0.5 rounded border ${getTagColor(

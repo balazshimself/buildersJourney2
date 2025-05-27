@@ -13,7 +13,7 @@ export const StaticTextTemplate: React.FC<{
   data: StaticTextTemplateData;
   className?: string;
 }> = ({ data, className }) => {
-  const { title, text } = data.data;
+  const { title, text } = data;
   return (
     <div className={`p-4 rounded-lg border bg-white shadow-sm ${className}`}>
       <h3 className="text-lg font-semibold mb-2">{title ?? "NO TITLE"}</h3>
@@ -29,12 +29,7 @@ export const ProgressBarTemplate: React.FC<{
   data: ProgressBarTemplateData;
   className?: string;
 }> = ({ data, className }) => {
-  const {
-    title,
-    checkpointData,
-    currentCheckpointIndex = 0,
-    reward,
-  } = data.data;
+  const { title, checkpointData, currentCheckpointIndex = 0, reward } = data;
   const totalCheckpoints = checkpointData ? checkpointData.length : 0;
 
   return (
@@ -54,7 +49,7 @@ export const ProgressBarTemplate: React.FC<{
       <div className="flex space-x-1 mb-1">
         {checkpointData.map((_, idx) => (
           <div
-            key={idx}
+            key={`checkpoint-${idx}`}
             className={`flex-1 h-3 rounded-full transition-colors ${
               idx < currentCheckpointIndex ? "bg-blue-600" : "bg-gray-200"
             }`}
@@ -75,7 +70,7 @@ export const CardChoiceTemplate: React.FC<{
   onSelectCard?: (card: CardData) => void;
   className?: string;
 }> = ({ data, onSelectCard, className }) => {
-  const { title, description, cards = [] } = data.data;
+  const { title, description, cards = [] } = data;
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -88,7 +83,7 @@ export const CardChoiceTemplate: React.FC<{
       <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-4 overflow-x-auto">
         {cards.map((card, index) => (
           <div
-            key={index}
+            key={`card-${index}-${card.title}`}
             className="p-4 rounded-lg border bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer min-w-[220px]"
             onClick={() => onSelectCard && onSelectCard(card)}
           >
@@ -113,6 +108,7 @@ export const TemplateRenderer: React.FC<{
   onSelectCard?: (card: CardData) => void;
   className?: string;
 }> = ({ template, onSelectCard, className }) => {
+  console.log("here is something: ", template);
   switch (template.type) {
     case TemplateType.StaticText:
       return <StaticTextTemplate data={template} className={className} />;

@@ -294,20 +294,6 @@ export function BuildSomethingPanel({
     });
   };
 
-  // Helper functions to extract title and content from templates
-  const getTemplateTitle = (template: CardComponent): string => {
-    switch (template.type) {
-      case "static_text":
-        return template.data.title;
-      case "progress_bar":
-        return template.data.title;
-      case "card_choice":
-        return template.data.title;
-      default:
-        return "Update";
-    }
-  };
-
   // if deny, nothing happens, just log the decision
   const handleDeny = () => {
     if (!response) return;
