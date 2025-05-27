@@ -1,31 +1,25 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Document as DocumentType } from "@/types";
 import {
   CardChoiceTemplate,
   ProgressBarTemplate,
+  StaticTextTemplate,
 } from "@/components/templates/templateCompontents";
 
-// Define the structure for entries in the specialized documents
-export interface DocumentEntry {
-  id: string;
-  title: string;
-  content: React.ReactNode;
-  timestamp: Date;
-  tag: string;
-}
-
 export function useSpecializedDocuments() {
-  const [marketingEntries, setMarketingEntries] = useState<DocumentEntry[]>([]);
-  const [managementEntries, setManagementEntries] = useState<DocumentEntry[]>(
-    []
-  );
+  const [marketingEntries, setMarketingEntries] = useState<
+    { data: JSX.Element; timestamp: Date }[]
+  >([]);
+  const [managementEntries, setManagementEntries] = useState<
+    { data: JSX.Element; timestamp: Date }[]
+  >([]);
 
   const progressBarExample = (
     <ProgressBarTemplate
       data={{
-        label: "Prototype creation",
+        title: "Prototype creation",
         checkpointData: [
           "Figure out wtf",
           "Iteration",
@@ -46,20 +40,17 @@ export function useSpecializedDocuments() {
         description: "Choose who to hire!",
         cards: [
           {
-            id: "candidate-1",
             title: "Alice Johnson",
             description:
               "Experienced frontend developer with a passion for UI/UX.",
             buttonString: "Hire Alice",
           },
           {
-            id: "candidate-2",
             title: "Bob Smith",
             description: "Backend engineer specializing in scalable APIs.",
             buttonString: "Hire Bob",
           },
           {
-            id: "candidate-3",
             title: "Carol Lee",
             description: "Full-stack developer and agile team leader.",
             buttonString: "Hire Carol",
@@ -68,55 +59,64 @@ export function useSpecializedDocuments() {
       }}
     />
   );
-  const [productEntries, setProductEntries] = useState<DocumentEntry[]>([
+  const [productEntries, setProductEntries] = useState<
+    { data: JSX.Element; timestamp: Date }[]
+  >([
     {
-      id: "progress-bar-example",
-      title: "Prototype Progress",
-      content: progressBarExample,
+      data: progressBarExample,
       timestamp: new Date(),
-      tag: "milestone",
     },
     {
-      id: "progress-bar-example",
-      title: "I need to have a TP",
-      content: cardChoiceTemplate,
+      data: cardChoiceTemplate,
       timestamp: new Date(),
-      tag: "event",
     },
   ]);
 
   // Functions to add entries to each specialized document
-  const addProductEntry = useCallback((entry: DocumentEntry) => {
-    setProductEntries((prev) =>
-      [entry, ...prev].sort(
-        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-      )
-    );
-  }, []);
+  const addProductEntry = useCallback(
+    (entry: { data: JSX.Element; timestamp: Date }) => {
+      setProductEntries((prev) =>
+        [entry, ...prev].sort(
+          (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+        )
+      );
+    },
+    []
+  );
 
-  const addMarketingEntry = useCallback((entry: DocumentEntry) => {
-    setMarketingEntries((prev) =>
-      [entry, ...prev].sort(
-        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-      )
-    );
-  }, []);
+  const addMarketingEntry = useCallback(
+    (entry: { data: JSX.Element; timestamp: Date }) => {
+      setMarketingEntries((prev) =>
+        [entry, ...prev].sort(
+          (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+        )
+      );
+    },
+    []
+  );
 
-  const addManagementEntry = useCallback((entry: DocumentEntry) => {
-    setManagementEntries((prev) =>
-      [entry, ...prev].sort(
-        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-      )
-    );
-  }, []);
+  const addManagementEntry = useCallback(
+    (entry: { data: JSX.Element; timestamp: Date }) => {
+      setManagementEntries((prev) =>
+        [entry, ...prev].sort(
+          (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+        )
+      );
+    },
+    []
+  );
 
   // Count entries by type for badges/summaries
   const productStats = useMemo(
     () => ({
       total: productEntries.length,
-      milestones: productEntries.filter((e) => e.tag === "milestone").length,
-      updates: productEntries.filter((e) => e.tag === "update").length,
-      risks: productEntries.filter((e) => e.tag === "risk").length,
+      milestones: productEntries.filter(
+        (e) => e.data.type === ProgressBarTemplate
+      ).length,
+      updates: productEntries.filter((e) => e.data.type === CardChoiceTemplate)
+        .length,
+      risks: productEntries.filter((e) => e.data.type === StaticTextTemplate)
+        .length,
     }),
     [productEntries]
   );
@@ -124,9 +124,13 @@ export function useSpecializedDocuments() {
   const marketingStats = useMemo(
     () => ({
       total: marketingEntries.length,
-      milestones: marketingEntries.filter((e) => e.tag === "milestone").length,
-      updates: marketingEntries.filter((e) => e.tag === "update").length,
-      risks: marketingEntries.filter((e) => e.tag === "risk").length,
+      milestones: productEntries.filter(
+        (e) => e.data.type === ProgressBarTemplate
+      ).length,
+      updates: productEntries.filter((e) => e.data.type === CardChoiceTemplate)
+        .length,
+      risks: productEntries.filter((e) => e.data.type === StaticTextTemplate)
+        .length,
     }),
     [marketingEntries]
   );
@@ -134,9 +138,13 @@ export function useSpecializedDocuments() {
   const managementStats = useMemo(
     () => ({
       total: managementEntries.length,
-      milestones: managementEntries.filter((e) => e.tag === "milestone").length,
-      updates: managementEntries.filter((e) => e.tag === "update").length,
-      risks: managementEntries.filter((e) => e.tag === "risk").length,
+      milestones: productEntries.filter(
+        (e) => e.data.type === ProgressBarTemplate
+      ).length,
+      updates: productEntries.filter((e) => e.data.type === CardChoiceTemplate)
+        .length,
+      risks: productEntries.filter((e) => e.data.type === StaticTextTemplate)
+        .length,
     }),
     [managementEntries]
   );
@@ -195,21 +203,29 @@ export function useSpecializedDocuments() {
               </div>
             ) : (
               productEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                >
+                <div className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-blue-800">{entry.title}</h4>
                     <span
                       className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
-                        entry.tag
+                        entry.data.type === ProgressBarTemplate
+                          ? "milestone"
+                          : entry.data.type === CardChoiceTemplate
+                          ? "update"
+                          : entry.data.type === StaticTextTemplate
+                          ? "risk"
+                          : "other"
                       )}`}
                     >
-                      {entry.tag}
+                      {entry.data.type === ProgressBarTemplate
+                        ? "milestone"
+                        : entry.data.type === CardChoiceTemplate
+                        ? "update"
+                        : entry.data.type === StaticTextTemplate
+                        ? "risk"
+                        : "other"}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{entry.content}</p>
+                  {entry.data}
                   <p className="text-xs text-gray-500">
                     {entry.timestamp.toLocaleDateString()} at{" "}
                     {entry.timestamp.toLocaleTimeString([], {
@@ -265,23 +281,29 @@ export function useSpecializedDocuments() {
               </div>
             ) : (
               marketingEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                >
+                <div className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-emerald-800">
-                      {entry.title}
-                    </h4>
                     <span
                       className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
-                        entry.tag
+                        entry.data.type === ProgressBarTemplate
+                          ? "milestone"
+                          : entry.data.type === CardChoiceTemplate
+                          ? "update"
+                          : entry.data.type === StaticTextTemplate
+                          ? "risk"
+                          : "other"
                       )}`}
                     >
-                      {entry.tag}
+                      {entry.data.type === ProgressBarTemplate
+                        ? "milestone"
+                        : entry.data.type === CardChoiceTemplate
+                        ? "update"
+                        : entry.data.type === StaticTextTemplate
+                        ? "risk"
+                        : "other"}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{entry.content}</p>
+                  {entry.data}
                   <p className="text-xs text-gray-500">
                     {entry.timestamp.toLocaleDateString()} at{" "}
                     {entry.timestamp.toLocaleTimeString([], {
@@ -336,23 +358,29 @@ export function useSpecializedDocuments() {
               </div>
             ) : (
               managementEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                >
+                <div className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-purple-800">
-                      {entry.title}
-                    </h4>
                     <span
                       className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
-                        entry.tag
+                        entry.data.type === ProgressBarTemplate
+                          ? "milestone"
+                          : entry.data.type === CardChoiceTemplate
+                          ? "update"
+                          : entry.data.type === StaticTextTemplate
+                          ? "risk"
+                          : "other"
                       )}`}
                     >
-                      {entry.tag}
+                      {entry.data.type === ProgressBarTemplate
+                        ? "milestone"
+                        : entry.data.type === CardChoiceTemplate
+                        ? "update"
+                        : entry.data.type === StaticTextTemplate
+                        ? "risk"
+                        : "other"}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{entry.content}</p>
+                  {entry.data}
                   <p className="text-xs text-gray-500">
                     {entry.timestamp.toLocaleDateString()} at{" "}
                     {entry.timestamp.toLocaleTimeString([], {

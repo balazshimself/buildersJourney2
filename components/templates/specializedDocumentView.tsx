@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  AIResponse,
   DocumentUpdate,
   TemplateRenderer,
   ChoiceItem,

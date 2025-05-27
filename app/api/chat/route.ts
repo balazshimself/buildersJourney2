@@ -28,88 +28,89 @@ For each area (marketing, product, management), you may return null if there is 
 SCHEMAS:
 
 StaticTextTemplate:
-{
+{{
   "title": string, // Title of the static text card
   "text": string   // Content of the static text card
-}
+}}
 
 ProgressBarTemplate:
-{
+{{
   "title": string, // Title of the progress bar card
   "checkpointData": string[], // List of checkpoint labels
   "reward": string // Reward for reaching the end of the progress bar
-}
+}}
 
 ChoiceTemplate:
-{
+{{
   "title": string, // Title of the choice card
   "description": string, // Description of the choice card
   "cards": [
-    {
+    {{
       "title": string, // Title of the card
       "description": string, // Description of the card
       "buttonString": string // Button text for the card
-    }
+    }}
   ]
-}
+}}
 
 Accepted response format:
-{
+{{
   "marketing": StaticTextTemplate | ProgressBarTemplate | ChoiceTemplate | null,
   "product": StaticTextTemplate | ProgressBarTemplate | ChoiceTemplate | null,
   "management": StaticTextTemplate | ProgressBarTemplate | ChoiceTemplate | null,
-  "log": {
+  "log": {{
     "title": string, // Summary of the user's decision
     "content": string, // Detailed effect of the decision
     "cost": number, // Cost of implementing the decision
     "monetary_return": number // Return on the action (can be negative)
-  }
-}
+  }}
+}}
 
 Rejected response format:
-{
+{{
   "reason": string // Reason for the rejection
-}
+}}
 
 RESPONSE FORMAT:
-{
+{{
   "type": "ACCEPTED" | "REJECTED",
   "tone": "positive" | "negative" | "neutral",
   "result": Accepted response format | Rejected response format
-}
+}}
 
 EXAMPLES:
 
 1. Rejection:
 Player input: "asdéklnsdagjbéasjdfnél"
 Response:
-{
+{{
   "type": "REJECTED",
   "tone": "negative",
-  "result": { "reason": "Incoherent prompt. Impossible to evaluate." }
-}
+  "result": {{ "reason": "Incoherent prompt. Impossible to evaluate." }}
+}}
 
 2. Acceptance:
 Player input: "I will launch a social media campaign."
 Response:
-{
+{{
   "type": "ACCEPTED",
   "tone": "positive",
-  "result": {
-    "marketing": {
+  "result": {{
+    "marketing": {{
+      "type": "static_text",
       "title": "Social Media Launch",
       "text": "You launched a campaign targeting young adults on Instagram and TikTok. Early engagement is promising."
-    },
+    }},
     "product": null,
     "management": null,
-    "log": {
+    "log": {{
       "title": "Social Media Campaign",
       "content": "The campaign increased brand awareness and attracted early adopters. Costs were moderate, but ROI is expected to be positive.",
       "cost": 500,
       "monetary_return": 1200
-    }
-  }
-}
+    }}
+  }}
+}}
 
 Always use the schemas above for your response. Do not add extra commentary.
 
@@ -141,6 +142,7 @@ export async function POST(req: NextRequest) {
 
     const StaticTextTemplate = z
       .object({
+        type: z.literal("static_text").describe("Type of the template"),
         title: z.string().describe("Title of the static text card"),
         text: z.string().describe("Content of the static text card"),
       })
@@ -148,6 +150,7 @@ export async function POST(req: NextRequest) {
 
     const ProgressBarTemplate = z
       .object({
+        type: z.literal("progress_bar").describe("Type of the template"),
         title: z.string().describe("Title of the progress bar card"),
         checkpointData: z
           .array(z.string())
@@ -160,6 +163,7 @@ export async function POST(req: NextRequest) {
 
     const ChoiceTemplate = z
       .object({
+        type: z.literal("card_choice").describe("Type of the template"),
         title: z.string().describe("Title of the choice card"),
         description: z.string().describe("Description of the choice card"),
         cards: z
@@ -177,9 +181,9 @@ export async function POST(req: NextRequest) {
 
     const TemplateTemplate = z
       .union([StaticTextTemplate, ProgressBarTemplate, ChoiceTemplate])
-      .describe("Array of templates for business simulation");
+      .describe("Templates for the business simulation");
 
-    const AcceptedSchema2 = z.object({
+    const AcceptedSchema = z.object({
       marketing: TemplateTemplate.nullable(),
       product: TemplateTemplate.nullable(),
       management: TemplateTemplate.nullable(),
@@ -218,7 +222,7 @@ export async function POST(req: NextRequest) {
         .describe(
           "The overall expected outcome of the business decision (positive, negative, or neutral)"
         ),
-      result: z.union([AcceptedSchema2, RejectedSchema]),
+      result: z.union([AcceptedSchema, RejectedSchema]),
     });
 
     const functionCallingModel = model.withStructuredOutput(ResponseSchema, {
@@ -232,6 +236,8 @@ export async function POST(req: NextRequest) {
       businessPlan: businessPlan,
       buildLogs: buildLogs,
     });
+
+    console.log("Chat API result:", result);
 
     return NextResponse.json(result, { status: 200 });
   } catch (e: any) {

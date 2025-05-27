@@ -47,6 +47,16 @@ export const useAppState = () => {
     [state]
   );
 
+  const updateCompanyValue = useCallback(
+    (value: number) => {
+      setState((prevState) => ({
+        ...prevState,
+        companyValue: prevState.companyValue + value,
+      }));
+    },
+    [state]
+  );
+
   const startDocumentPhase = useCallback(
     (result: any) => {
       // Create the business plan document
@@ -198,5 +208,6 @@ export const useAppState = () => {
     updateDocument,
     updateTimer,
     setTimeline,
+    updateCompanyValue,
   };
 };

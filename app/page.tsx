@@ -6,7 +6,7 @@ import { ProblemPhase } from "@/components/problemPhase";
 import { DocumentPhase } from "@/components/documentPhase/documentPhase";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { EvaluationPhase } from "@/components/evaluationPhase";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Home() {
   const {

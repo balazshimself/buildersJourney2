@@ -1,23 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, AlertTriangle, CheckCircle2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ResponseTypes, Document } from "@/types";
+import {
+  CardChoiceTemplate,
+  CardComponent,
+  ProgressBarTemplate,
+  StaticTextTemplate,
+} from "../templates/templateCompontents";
+import { TemplateRenderer } from "../templates/templateCompontents";
+
+type StaticTextTemplate = {
+  type: "static_text";
+  data: {
+    title: string;
+    text: string;
+  };
+};
+
+type ProgressBarTemplate = {
+  type: "progress_bar";
+  data: {
+    title: string;
+    checkpointData: string[];
+    reward: string;
+  };
+};
+
+type CardChoiceCard = {
+  title: string;
+  description: string;
+  buttonString: string;
+};
+type CardChoiceTemplate = {
+  type: "card_choice";
+  data: {
+    title: string;
+    description: string;
+    cards: CardChoiceCard[];
+  };
+};
+
+export type TemplateTemplate =
+  | CardChoiceTemplate
+  | StaticTextTemplate
+  | ProgressBarTemplate;
 
 type BuildResponse = {
   tone: "negative" | "neutral" | "positive";
   type: ResponseTypes;
   result: {
-    reason: string;
-    cost: number;
-    monetary_return: number;
-    chat_response: string;
-    title: string;
-    management: { title: string; content: string; tag: string };
-    marketing: { title: string; content: string; tag: string };
-    product: { title: string; content: string; tag: string };
+    reason?: string;
+    marketing?: StaticTextTemplate | ProgressBarTemplate | CardChoiceTemplate;
+    product?: StaticTextTemplate | ProgressBarTemplate | CardChoiceTemplate;
+    management?: StaticTextTemplate | ProgressBarTemplate | CardChoiceTemplate;
+    log: {
+      title: string;
+      content: string;
+      cost: number;
+      monetary_return: number;
+    };
   };
 };
 
@@ -29,9 +74,9 @@ interface BuildSomethingPanelProps {
     accepted: boolean;
     cost: number;
     return: number;
-    management: { title: string; content: string; tag: string };
-    marketing: { title: string; content: string; tag: string };
-    product: { title: string; content: string; tag: string };
+    management?: JSX.Element[];
+    marketing?: JSX.Element[];
+    product?: JSX.Element[];
   }) => void;
   availableFunds: number;
   businessPlan: Document | null;
@@ -46,6 +91,12 @@ export function BuildSomethingPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<BuildResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (response) {
+      console.log("Response state updated:", response);
+    }
+  }, [response]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,11 +154,101 @@ export function BuildSomethingPanel({
     }
   };
 
+  // const handleAccept = () => {
+  //   if (!response) return;
+
+  //   onComplete({
+  //     title: response.result.title,
+  //     content: (
+  //       <div className="space-y-4">
+  //         <div className="p-4 border-l-4 border-blue-500 bg-blue-50 rounded">
+  //           <p className="font-bold mb-2">Business Decision:</p>
+  //           <p className="mb-4">{prompt}</p>
+  //         </div>
+
+  //         <div className="p-4 border-l-4 border-green-500 bg-green-50 rounded">
+  //           <p className="font-bold mb-2">Outcome:</p>
+  //           <p className="mb-2">{response.result.chat_response}</p>
+  //         </div>
+
+  //         <div className="grid grid-cols-3 gap-4 mt-4">
+  //           <div className="p-3 border rounded-md bg-blue-50 flex flex-col gap-1">
+  //             <div className="flex items-center gap-1 text-xs font-semibold text-blue-700">
+  //               <span className="px-1.5 py-0.5 rounded bg-blue-200 text-blue-800">
+  //                 {response.result.product.tag}
+  //               </span>
+  //               <span>PRODUCT</span>
+  //             </div>
+  //             <h4 className="font-medium text-sm">
+  //               {response.result.product.title}
+  //             </h4>
+  //             <p className="text-xs">{response.result.product.content}</p>
+  //           </div>
+
+  //           <div className="p-3 border rounded-md bg-green-50 flex flex-col gap-1">
+  //             <div className="flex items-center gap-1 text-xs font-semibold text-green-700">
+  //               <span className="px-1.5 py-0.5 rounded bg-green-200 text-green-800">
+  //                 {response.result.marketing.tag}
+  //               </span>
+  //               <span>MARKETING</span>
+  //             </div>
+  //             <h4 className="font-medium text-sm">
+  //               {response.result.marketing.title}
+  //             </h4>
+  //             <p className="text-xs">{response.result.marketing.content}</p>
+  //           </div>
+
+  //           <div className="p-3 border rounded-md bg-purple-50 flex flex-col gap-1">
+  //             <div className="flex items-center gap-1 text-xs font-semibold text-purple-700">
+  //               <span className="px-1.5 py-0.5 rounded bg-purple-200 text-purple-800">
+  //                 {response.result.management.tag}
+  //               </span>
+  //               <span>MANAGEMENT</span>
+  //             </div>
+  //             <h4 className="font-medium text-sm">
+  //               {response.result.management.title}
+  //             </h4>
+  //             <p className="text-xs">{response.result.management.content}</p>
+  //           </div>
+  //         </div>
+
+  //         <div className="mt-4 flex justify-between text-sm border-t pt-4">
+  //           <span>Investment: ${response.result.cost.toLocaleString()}</span>
+  //           <span>
+  //             Expected Return: $
+  //             {response.result.monetary_return.toLocaleString()}
+  //           </span>
+  //           <span
+  //             className={cn(
+  //               "font-semibold",
+  //               response.tone === "positive"
+  //                 ? "text-green-600"
+  //                 : response.tone === "negative"
+  //                 ? "text-red-600"
+  //                 : "text-yellow-600"
+  //             )}
+  //           >
+  //             {response.tone.charAt(0).toUpperCase() + response.tone.slice(1)}{" "}
+  //             outcome
+  //           </span>
+  //         </div>
+  //       </div>
+  //     ),
+  //     management: response.result.management,
+  //     product: response.result.product,
+  //     marketing: response.result.marketing,
+  //     effect: response.tone,
+  //     accepted: true,
+  //     cost: response.result.cost,
+  //     return: response.result.monetary_return,
+  //   });
+  // };
+
   const handleAccept = () => {
-    if (!response) return;
+    if (!response || !response.result.log) return;
 
     onComplete({
-      title: response.result.title,
+      title: response.result.log.title,
       content: (
         <div className="space-y-4">
           <div className="p-4 border-l-4 border-blue-500 bg-blue-50 rounded">
@@ -117,55 +258,45 @@ export function BuildSomethingPanel({
 
           <div className="p-4 border-l-4 border-green-500 bg-green-50 rounded">
             <p className="font-bold mb-2">Outcome:</p>
-            <p className="mb-2">{response.result.chat_response}</p>
+            <p className="mb-2">{response.result.log.content}</p>
           </div>
 
           <div className="grid grid-cols-3 gap-4 mt-4">
-            <div className="p-3 border rounded-md bg-blue-50 flex flex-col gap-1">
-              <div className="flex items-center gap-1 text-xs font-semibold text-blue-700">
-                <span className="px-1.5 py-0.5 rounded bg-blue-200 text-blue-800">
-                  {response.result.product.tag}
-                </span>
-                <span>PRODUCT</span>
+            {response.result.product && (
+              <div className="p-3 border rounded-md bg-blue-50">
+                <div className="text-xs font-semibold text-blue-700 mb-2">
+                  PRODUCT
+                </div>
+                <TemplateRenderer template={response.result.product} />
               </div>
-              <h4 className="font-medium text-sm">
-                {response.result.product.title}
-              </h4>
-              <p className="text-xs">{response.result.product.content}</p>
-            </div>
+            )}
 
-            <div className="p-3 border rounded-md bg-green-50 flex flex-col gap-1">
-              <div className="flex items-center gap-1 text-xs font-semibold text-green-700">
-                <span className="px-1.5 py-0.5 rounded bg-green-200 text-green-800">
-                  {response.result.marketing.tag}
-                </span>
-                <span>MARKETING</span>
+            {response.result.marketing && (
+              <div className="p-3 border rounded-md bg-green-50">
+                <div className="text-xs font-semibold text-green-700 mb-2">
+                  MARKETING
+                </div>
+                <TemplateRenderer template={response.result.marketing} />
               </div>
-              <h4 className="font-medium text-sm">
-                {response.result.marketing.title}
-              </h4>
-              <p className="text-xs">{response.result.marketing.content}</p>
-            </div>
+            )}
 
-            <div className="p-3 border rounded-md bg-purple-50 flex flex-col gap-1">
-              <div className="flex items-center gap-1 text-xs font-semibold text-purple-700">
-                <span className="px-1.5 py-0.5 rounded bg-purple-200 text-purple-800">
-                  {response.result.management.tag}
-                </span>
-                <span>MANAGEMENT</span>
+            {response.result.management && (
+              <div className="p-3 border rounded-md bg-purple-50">
+                <div className="text-xs font-semibold text-purple-700 mb-2">
+                  MANAGEMENT
+                </div>
+                <TemplateRenderer template={response.result.management} />
               </div>
-              <h4 className="font-medium text-sm">
-                {response.result.management.title}
-              </h4>
-              <p className="text-xs">{response.result.management.content}</p>
-            </div>
+            )}
           </div>
 
           <div className="mt-4 flex justify-between text-sm border-t pt-4">
-            <span>Investment: ${response.result.cost.toLocaleString()}</span>
+            <span>
+              Investment: ${response.result.log.cost.toLocaleString()}
+            </span>
             <span>
               Expected Return: $
-              {response.result.monetary_return.toLocaleString()}
+              {response.result.log.monetary_return.toLocaleString()}
             </span>
             <span
               className={cn(
@@ -183,21 +314,42 @@ export function BuildSomethingPanel({
           </div>
         </div>
       ),
-      management: response.result.management,
-      product: response.result.product,
-      marketing: response.result.marketing,
+      management: response.result.management
+        ? [<TemplateRenderer template={response.result.management} />]
+        : undefined,
+      product: response.result.product
+        ? [<TemplateRenderer template={response.result.product} />]
+        : undefined,
+      marketing: response.result.marketing
+        ? [<TemplateRenderer template={response.result.marketing} />]
+        : undefined,
       effect: response.tone,
       accepted: true,
-      cost: response.result.cost,
-      return: response.result.monetary_return,
+      cost: response.result.log.cost,
+      return: response.result.log.monetary_return,
     });
   };
 
+  // Helper functions to extract title and content from templates
+  const getTemplateTitle = (template: CardComponent): string => {
+    switch (template.type) {
+      case "static_text":
+        return template.data.title;
+      case "progress_bar":
+        return template.data.title;
+      case "card_choice":
+        return template.data.title;
+      default:
+        return "Update";
+    }
+  };
+
+  // if deny, nothing happens, just log the decision
   const handleDeny = () => {
     if (!response) return;
 
     onComplete({
-      title: response.result.title,
+      title: response.result.log.title,
       content: (
         <div className="p-4">
           <div className="p-4 border-l-4 border-gray-300 bg-gray-50 rounded">
@@ -210,9 +362,6 @@ export function BuildSomethingPanel({
           </div>
         </div>
       ),
-      management: response.result.management,
-      product: response.result.product,
-      marketing: response.result.marketing,
       effect: response.tone,
       accepted: false,
       cost: 0,
@@ -278,9 +427,11 @@ export function BuildSomethingPanel({
           <div className="border rounded-md p-4 bg-gray-50">
             <div className="flex items-center gap-2 mb-3">
               {getOutcomeIcon(response.tone)}
-              <h3 className="font-medium text-lg">{response.result.title}</h3>
+              <h3 className="font-medium text-lg">
+                {response.result.log.title}
+              </h3>
             </div>
-            <div className="grid grid-cols-3 gap-4 mb-4 text-xs">
+            {/* <div className="grid grid-cols-3 gap-4 mb-4 text-xs">
               <div className="p-2 border rounded bg-white">
                 <div className="text-blue-700 font-semibold">PRODUCT</div>
                 <p className="mt-1">{response.result.product.content}</p>
@@ -295,19 +446,19 @@ export function BuildSomethingPanel({
                 <div className="text-purple-700 font-semibold">MANAGEMENT</div>
                 <p className="mt-1">{response.result.management.content}</p>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex justify-between text-sm text-gray-600 mb-4">
               <div>
                 Initial investment:{" "}
                 <span className="font-medium">
-                  ${response.result.cost + Math.floor(Math.random() * 1000)}
+                  ${response.result.log.cost + Math.floor(Math.random() * 1000)}
                 </span>
               </div>
               <div>
                 Potential return:{" "}
                 <span className="font-medium">
-                  ${response.result.monetary_return}
+                  ${response.result.log.monetary_return}
                 </span>
               </div>
             </div>
@@ -317,9 +468,9 @@ export function BuildSomethingPanel({
                 type="button"
                 onClick={handleAccept}
                 className="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 flex-1"
-                disabled={response.result.cost > availableFunds}
+                disabled={response.result.log.cost > availableFunds}
               >
-                {response.result.cost > availableFunds
+                {response.result.log.cost > availableFunds
                   ? "Insufficient Funds"
                   : "Accept & Implement"}
               </Button>
@@ -334,10 +485,10 @@ export function BuildSomethingPanel({
               </Button>
             </div>
 
-            {response.result.cost > availableFunds && (
+            {response.result.log.cost > availableFunds && (
               <div className="mt-3 text-sm text-red-600 flex items-center gap-1">
                 <AlertTriangle className="h-4 w-4" />
-                You need ${response.result.cost - availableFunds} more to
+                You need ${response.result.log.cost - availableFunds} more to
                 implement this initiative.
               </div>
             )}
@@ -367,7 +518,7 @@ export function BuildSomethingPanel({
                   d="M12 8v4m0 4h.01"
                 />
               </svg>
-              {response.result.reason!}
+              {response.result.reason}
             </div>
           )
         )}

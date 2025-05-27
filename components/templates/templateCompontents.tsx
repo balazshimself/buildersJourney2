@@ -1,4 +1,5 @@
 import React from "react";
+import { TemplateTemplate } from "../documentPhase/buildSomethingPanel";
 
 // Define TypeScript types for the template components
 export type StaticTextTemplateData = {
@@ -7,14 +8,13 @@ export type StaticTextTemplateData = {
 };
 
 export type ProgressBarTemplateData = {
-  label: string;
+  title: string;
   checkpointData: string[];
   currentCheckpointIndex: number;
   reward: string;
 };
 
 export type ChoiceItem = {
-  id: string;
   title: string;
   description: string;
   buttonString: string;
@@ -24,7 +24,6 @@ export type ChoiceTemplateData = {
   title: string;
   description: string;
   cards: {
-    id: string;
     title: string;
     description: string;
     buttonString: string;
@@ -32,9 +31,9 @@ export type ChoiceTemplateData = {
 };
 
 export type CardComponent =
-  | { type: "staticText"; data: StaticTextTemplateData }
-  | { type: "progressBar"; data: ProgressBarTemplateData }
-  | { type: "cardChoice"; data: ChoiceTemplateData };
+  | { type: "static_text"; data: StaticTextTemplateData }
+  | { type: "progress_bar"; data: ProgressBarTemplateData }
+  | { type: "card_choice"; data: ChoiceTemplateData };
 
 export type DocumentUpdate = {
   document: "Marketing" | "Product Development" | "Management";
@@ -63,13 +62,13 @@ export const ProgressBarTemplate: React.FC<{
   data: ProgressBarTemplateData;
   className?: string;
 }> = ({ data, className }) => {
-  const { label, checkpointData, currentCheckpointIndex, reward } = data;
+  const { title, checkpointData, currentCheckpointIndex, reward } = data;
   const totalCheckpoints = checkpointData.length;
 
   return (
     <div className={`p-4 rounded-lg border bg-white shadow-sm ${className}`}>
       <div className="flex justify-between mb-2">
-        <span className="text-sm font-medium">{label}</span>
+        <span className="text-sm font-medium">{title}</span>
         <span className="text-sm font-medium text-green-700">
           Reward: {reward}
         </span>
@@ -133,16 +132,21 @@ export const CardChoiceTemplate: React.FC<{
 
 // Template Renderer - renders the appropriate template based on type
 export const TemplateRenderer: React.FC<{
-  template: CardComponent;
+  template: TemplateTemplate;
   onSelectCard?: (card: ChoiceItem) => void;
   className?: string;
 }> = ({ template, onSelectCard, className }) => {
   switch (template.type) {
-    case "staticText":
+    case "static_text":
       return <StaticTextTemplate data={template.data} className={className} />;
-    case "progressBar":
-      return <ProgressBarTemplate data={template.data} className={className} />;
-    case "cardChoice":
+    case "progress_bar":
+      return (
+        <ProgressBarTemplate
+          data={{ ...template.data, currentCheckpointIndex: 0 }}
+          className={className}
+        />
+      );
+    case "card_choice":
       return (
         <CardChoiceTemplate
           data={template.data}

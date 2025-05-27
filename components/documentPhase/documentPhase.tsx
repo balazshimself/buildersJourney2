@@ -167,33 +167,36 @@ export function DocumentPhase({
                 // Update product entries if provided by AI
                 if (result.product) {
                   addProductEntry({
-                    id: `product-${entryId}`,
-                    title: result.product.title,
-                    content: result.product.content,
+                    data: Array.isArray(result.product) ? (
+                      <>{result.product}</>
+                    ) : (
+                      result.product
+                    ),
                     timestamp: now,
-                    tag: result.product.tag,
                   });
                 }
 
                 // Update marketing entries if provided by AI
                 if (result.marketing) {
                   addMarketingEntry({
-                    id: `marketing-${entryId}`,
-                    title: result.marketing.title,
-                    content: result.marketing.content,
+                    data: Array.isArray(result.marketing) ? (
+                      <>{result.marketing}</>
+                    ) : (
+                      result.marketing
+                    ),
                     timestamp: now,
-                    tag: result.marketing.tag,
                   });
                 }
 
                 // Update management entries if provided by AI
                 if (result.management) {
                   addManagementEntry({
-                    id: `management-${entryId}`,
-                    title: result.management.title,
-                    content: result.management.content,
+                    data: Array.isArray(result.management) ? (
+                      <>{result.management}</>
+                    ) : (
+                      result.management
+                    ),
                     timestamp: now,
-                    tag: result.management.tag,
                   });
                 }
               }}
