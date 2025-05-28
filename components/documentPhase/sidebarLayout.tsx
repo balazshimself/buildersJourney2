@@ -61,9 +61,7 @@ export function SidebarLayout({
       <SidebarHeader className="p-4 border-b">
         <div className="space-y-2">
           <div className="text-sm text-gray-600">Company Balance</div>
-          <div className="text-xl font-semibold">
-            ${companyValue.toLocaleString()}
-          </div>
+          <div className="text-xl font-semibold">${companyValue}</div>
           <div className="text-xs text-gray-500 text-right">
             Target: $100,000
           </div>
@@ -170,12 +168,13 @@ export function SidebarLayout({
                             <span className="flex-grow truncate">
                               {doc.title}
                             </span>
-                            {doc.countdown && (
-                              <span className="ml-auto text-xs text-gray-500 flex items-center">
-                                <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse mr-1"></span>
-                                {doc.countdown}s
-                              </span>
-                            )}
+                            {doc.countdown !== undefined &&
+                              doc.countdown > 0 && (
+                                <span className="ml-auto text-xs text-gray-500 flex items-center">
+                                  <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse mr-1"></span>
+                                  {doc.countdown}s
+                                </span>
+                              )}
                           </button>
                         ))}
                       </div>

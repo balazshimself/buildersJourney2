@@ -49,6 +49,7 @@ export const useAppState = () => {
 
   const updateCompanyValue = useCallback(
     (value: number) => {
+      console.log("Updating company value by:", value);
       setState((prevState) => ({
         ...prevState,
         companyValue: prevState.companyValue + value,

@@ -19,6 +19,7 @@ export default function Home() {
     updateDocument,
     updateTimer,
     setTimeline,
+    updateCompanyValue,
   } = useAppState();
 
   const [userSolution, setUserSolution] = useState<string>("");
@@ -57,6 +58,8 @@ export default function Home() {
               onTimerChange={updateTimer}
               setTimeLine={setTimeline}
               startEvaluationPhase={startEvaluationPhase}
+              companyValue={state.companyValue}
+              updateCompanyValue={updateCompanyValue}
             />
           </SidebarProvider>
         );

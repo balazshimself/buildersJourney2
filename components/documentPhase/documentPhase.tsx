@@ -19,6 +19,8 @@ interface DocumentPhaseProps {
   onTimerChange: (time: number) => void;
   setTimeLine: (timeline: GanttTask[]) => void;
   startEvaluationPhase: () => void;
+  companyValue: number;
+  updateCompanyValue: (value: number) => void;
 }
 
 export function DocumentPhase({
@@ -31,8 +33,9 @@ export function DocumentPhase({
   onTimerChange,
   setTimeLine,
   startEvaluationPhase,
+  companyValue,
+  updateCompanyValue,
 }: DocumentPhaseProps) {
-  const [companyValue, setCompanyValue] = useState(5000);
   const [activeDocument, setActiveDocument] = useState<Document | null>(
     businessPlan
   );
@@ -65,6 +68,10 @@ export function DocumentPhase({
     }
   }, [timer]);
 
+  useEffect(() => {
+    console.log("Here is the companyvalue: ", companyValue);
+  }, [companyValue]);
+
   // Setup countdown timers for research projects
   useEffect(() => {
     // Find documents that need countdown timers (research that is accepted but not editable)
@@ -95,39 +102,12 @@ export function DocumentPhase({
         onUpdateDocument(doc.id, { countdown: timeLeft });
 
         if (timeLeft <= 0) {
-          // Clear the interval
           clearInterval(intervalsRef.current[intervalKey]);
           delete intervalsRef.current[intervalKey];
-
-          // Apply costs and returns ONLY when project is complete
-          if (doc.metadata?.cost) {
-            setCompanyValue((prev) => Math.max(0, prev - doc.metadata!.cost!));
-
-            // Apply return if there is one
-            if (doc.metadata?.return && doc.metadata.return > 0) {
-              setTimeout(() => {
-                setCompanyValue((prev) => prev + doc.metadata!.return!);
-              }, 5000);
-            }
-          } else {
-            // For regular research without cost metadata
-            const valueChange = Math.floor(Math.random() * 5000) + 1000;
-            setCompanyValue((prev) => prev + valueChange);
-          }
-
-          // Determine which value to show based on metadata
-          const valueChangeDisplay = doc.metadata?.return
-            ? doc.metadata.return.toLocaleString()
-            : Math.floor(Math.random() * 5000 + 1000).toLocaleString();
-
-          onUpdateDocument(doc.id, {
-            content: `# Research Results\n\nProject: ${doc.title}\n\nFindings:\n- Successfully developed initial prototype\n- Market validation shows strong interest\n- Potential revenue increase projected\n\nImpact:\nCompany value increased by $${valueChangeDisplay}`,
-            countdown: undefined,
-          });
+          updateCompanyValue(doc.metadata?.return ?? 0);
         }
       }, 1000);
 
-      // Store the interval so we can clean it up
       intervalsRef.current[intervalKey] = countdownInterval;
     });
   }, [documents, onUpdateDocument]);
@@ -145,8 +125,9 @@ export function DocumentPhase({
           title: "Build something!",
           content: (
             <BuildSomethingPanel
-              availableFunds={companyValue}
+              companyValue={companyValue}
               businessPlan={businessPlan}
+              updateCompanyValue={updateCompanyValue}
               onComplete={(result) => {
                 // Add to build logs as before
                 onAddDocument({

@@ -42,19 +42,26 @@ interface BuildSomethingPanelProps {
     marketing?: JSX.Element[];
     product?: JSX.Element[];
   }) => void;
-  availableFunds: number;
+  updateCompanyValue: (value: number) => void;
+  companyValue: number;
   businessPlan: Document | null;
 }
 
 export function BuildSomethingPanel({
   onComplete,
-  availableFunds,
+  companyValue,
   businessPlan,
+  updateCompanyValue,
 }: BuildSomethingPanelProps) {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<BuildResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasDecided, setHasDecided] = useState(false);
+
+  useEffect(() => {
+    console.log("Has decided state updated:", hasDecided);
+  }, [hasDecided]);
 
   useEffect(() => {
     if (response) {
@@ -118,103 +125,15 @@ export function BuildSomethingPanel({
     }
   };
 
-  // const handleAccept = () => {
-  //   if (!response) return;
-
-  //   onComplete({
-  //     title: response.result.title,
-  //     content: (
-  //       <div className="space-y-4">
-  //         <div className="p-4 border-l-4 border-blue-500 bg-blue-50 rounded">
-  //           <p className="font-bold mb-2">Business Decision:</p>
-  //           <p className="mb-4">{prompt}</p>
-  //         </div>
-
-  //         <div className="p-4 border-l-4 border-green-500 bg-green-50 rounded">
-  //           <p className="font-bold mb-2">Outcome:</p>
-  //           <p className="mb-2">{response.result.chat_response}</p>
-  //         </div>
-
-  //         <div className="grid grid-cols-3 gap-4 mt-4">
-  //           <div className="p-3 border rounded-md bg-blue-50 flex flex-col gap-1">
-  //             <div className="flex items-center gap-1 text-xs font-semibold text-blue-700">
-  //               <span className="px-1.5 py-0.5 rounded bg-blue-200 text-blue-800">
-  //                 {response.result.product.tag}
-  //               </span>
-  //               <span>PRODUCT</span>
-  //             </div>
-  //             <h4 className="font-medium text-sm">
-  //               {response.result.product.title}
-  //             </h4>
-  //             <p className="text-xs">{response.result.product.content}</p>
-  //           </div>
-
-  //           <div className="p-3 border rounded-md bg-green-50 flex flex-col gap-1">
-  //             <div className="flex items-center gap-1 text-xs font-semibold text-green-700">
-  //               <span className="px-1.5 py-0.5 rounded bg-green-200 text-green-800">
-  //                 {response.result.marketing.tag}
-  //               </span>
-  //               <span>MARKETING</span>
-  //             </div>
-  //             <h4 className="font-medium text-sm">
-  //               {response.result.marketing.title}
-  //             </h4>
-  //             <p className="text-xs">{response.result.marketing.content}</p>
-  //           </div>
-
-  //           <div className="p-3 border rounded-md bg-purple-50 flex flex-col gap-1">
-  //             <div className="flex items-center gap-1 text-xs font-semibold text-purple-700">
-  //               <span className="px-1.5 py-0.5 rounded bg-purple-200 text-purple-800">
-  //                 {response.result.management.tag}
-  //               </span>
-  //               <span>MANAGEMENT</span>
-  //             </div>
-  //             <h4 className="font-medium text-sm">
-  //               {response.result.management.title}
-  //             </h4>
-  //             <p className="text-xs">{response.result.management.content}</p>
-  //           </div>
-  //         </div>
-
-  //         <div className="mt-4 flex justify-between text-sm border-t pt-4">
-  //           <span>Investment: ${response.result.cost.toLocaleString()}</span>
-  //           <span>
-  //             Expected Return: $
-  //             {response.result.monetary_return.toLocaleString()}
-  //           </span>
-  //           <span
-  //             className={cn(
-  //               "font-semibold",
-  //               response.tone === "positive"
-  //                 ? "text-green-600"
-  //                 : response.tone === "negative"
-  //                 ? "text-red-600"
-  //                 : "text-yellow-600"
-  //             )}
-  //           >
-  //             {response.tone.charAt(0).toUpperCase() + response.tone.slice(1)}{" "}
-  //             outcome
-  //           </span>
-  //         </div>
-  //       </div>
-  //     ),
-  //     management: response.result.management,
-  //     product: response.result.product,
-  //     marketing: response.result.marketing,
-  //     effect: response.tone,
-  //     accepted: true,
-  //     cost: response.result.cost,
-  //     return: response.result.monetary_return,
-  //   });
-  // };
-
   const handleAccept = () => {
     if (!response || !response.result.log) return;
+    setHasDecided(true);
+    updateCompanyValue(response.result.log.cost);
 
     onComplete({
       title: response.result.log.title,
       content: (
-        <div className="space-y-4">
+        <div className="space-y-4" key={response.result.log.title}>
           <div className="p-4 border-l-4 border-blue-500 bg-blue-50 rounded">
             <p className="font-bold mb-2">Business Decision:</p>
             <p className="mb-4">{prompt}</p>
@@ -297,6 +216,7 @@ export function BuildSomethingPanel({
   // if deny, nothing happens, just log the decision
   const handleDeny = () => {
     if (!response) return;
+    setHasDecided(true);
 
     onComplete({
       title: response.result.log.title,
@@ -418,9 +338,9 @@ export function BuildSomethingPanel({
                 type="button"
                 onClick={handleAccept}
                 className="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 flex-1"
-                disabled={response.result.log.cost > availableFunds}
+                disabled={response.result.log.cost > companyValue || hasDecided}
               >
-                {response.result.log.cost > availableFunds
+                {response.result.log.cost > companyValue
                   ? "Insufficient Funds"
                   : "Accept & Implement"}
               </Button>
@@ -429,16 +349,17 @@ export function BuildSomethingPanel({
                 type="button"
                 onClick={handleDeny}
                 variant="outline"
+                disabled={hasDecided}
                 className="px-4 py-2 rounded-md font-medium hover:bg-gray-100 border flex-1"
               >
                 Cancel Initiative
               </Button>
             </div>
 
-            {response.result.log.cost > availableFunds && (
+            {response.result.log.cost > companyValue && (
               <div className="mt-3 text-sm text-red-600 flex items-center gap-1">
                 <AlertTriangle className="h-4 w-4" />
-                You need ${response.result.log.cost - availableFunds} more to
+                You need ${response.result.log.cost - companyValue} more to
                 implement this initiative.
               </div>
             )}

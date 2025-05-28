@@ -35,16 +35,6 @@ export function useSpecializedDocuments() {
     />
   );
 
-  const staticTextExample = (
-    <StaticTextTemplate
-      data={{
-        type: TemplateType.StaticText,
-        title: "Risk: Supply Chain Delay",
-        text: "There is a potential delay in sourcing key components due to global supply chain issues. Mitigation plan: identify alternative suppliers and adjust project timeline accordingly.",
-      }}
-    />
-  );
-
   const cardChoiceTemplate: React.ReactElement = (
     <CardChoiceTemplate
       data={{

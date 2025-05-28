@@ -107,7 +107,7 @@ Response:
     "log": {{
       "title": "Social Media Campaign",
       "content": "The campaign increased brand awareness and attracted early adopters. Costs were moderate, but ROI is expected to be positive.",
-      "cost": 500,
+      "cost": 550,
       "monetary_return": 1200
     }}
   }}
@@ -201,10 +201,12 @@ export async function POST(req: NextRequest) {
         content: z.string().describe("Detailed effect of the decision"),
         cost: z
           .number()
-          .describe("The cost of implementing the user's decision"),
+          .describe(
+            "The cost of implementing the user's decision. Can't be negative, or zero."
+          ),
         monetary_return: z
           .number()
-          .describe("The return on the action. Can also be negative."),
+          .describe("The return on the action. Can be negative."),
       }),
     });
 
