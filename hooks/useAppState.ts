@@ -110,7 +110,7 @@ export const useAppState = () => {
   }, [state, startDocumentPhase]);
 
   const evaluateSolution = useCallback(
-    async (userInput: string) => {
+    async (userInput: string, previousPrompts?: string[]) => {
       // Set validating state
       setState((prevState) => ({
         ...prevState,
@@ -127,6 +127,7 @@ export const useAppState = () => {
           body: JSON.stringify({
             problemStatement: state.currentProblem?.marketAnalysis || "",
             businessPlan: userInput,
+            previousPrompts: previousPrompts || [],
           }),
         });
 

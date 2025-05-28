@@ -35,7 +35,7 @@ Consider:
 - Evidence of learning and adaptation
 - Realistic approach to challenges
 
-Provide constructive feedback that highlights both successes and areas for improvement. It is vital, to be "cruel" if needed.
+Provide constructive feedback that highlights both successes and areas for improvement. It is vital, to be cruel if needed.
 If the business isn't standing on a strong enough foundation, let the user know now, don't be afraid to score low.`;
 
 const EvaluationSchema = z.object({

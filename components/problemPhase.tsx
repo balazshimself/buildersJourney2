@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Problem } from "@/types";
 import { OptimizedTimer } from "./optimizedTimer";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ interface ProblemPhaseProps {
   userSolution: string;
   timer: number;
   onSolutionChange: (solution: string) => void;
-  onEvaluate: (solution: string) => void;
+  onEvaluate: (solution: string, previousPrompts?: string[]) => void;
   testEvaluate?: () => void;
   onTimerChange: (time: number) => void;
   rejectionReason?: string;
@@ -28,11 +28,17 @@ export function ProblemPhase({
   rejectionReason,
   isLoading: isValidating,
 }: ProblemPhaseProps) {
+  const [previousPrompts, setPreviousPrompts] = useState<string[]>([]);
+
   useEffect(() => {
     if (timer === 0 && !isValidating) {
-      onEvaluate(userSolution);
+      onEvaluate(userSolution, previousPrompts);
     }
   }, [timer, userSolution, onEvaluate]);
+
+  useEffect(() => {
+    console.log("Previous prompts updated:", previousPrompts);
+  }, [previousPrompts]);
 
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-4 flex flex-col h-full animate-in fade-in duration-500">
@@ -50,7 +56,10 @@ export function ProblemPhase({
           <OptimizedTimer
             initialTime={timer}
             autoStart={true}
-            onComplete={() => onEvaluate(userSolution)}
+            onComplete={() => {
+              onEvaluate(userSolution, previousPrompts);
+              setPreviousPrompts((prev) => [...prev, userSolution]);
+            }}
             onTimeChange={onTimerChange}
             className="min-w-28"
           />
@@ -93,6 +102,7 @@ export function ProblemPhase({
             <Button
               onClick={() => {
                 onEvaluate(userSolution);
+                setPreviousPrompts((prev) => [...prev, userSolution]);
               }}
               disabled={userSolution.trim().length === 0 || isValidating}
               className="bg-blue-600 hover:bg-blue-700"
@@ -101,34 +111,34 @@ export function ProblemPhase({
             </Button>
           </div>
         </div>
-        {rejectionReason && (
-          <div className="mt-3 p-3 rounded bg-red-100 border border-red-400 text-red-700 text-sm font-medium flex items-center gap-2">
-            <svg
-              className="w-4 h-4 text-red-500 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 8v4m0 4h.01"
-              />
-            </svg>
-            {rejectionReason}
-          </div>
-        )}
       </div>
+      {rejectionReason && (
+        <div className="mt-3 p-3 rounded bg-red-100 border border-red-400 text-red-700 text-sm font-medium flex items-center gap-2">
+          <svg
+            className="w-4 h-4 text-red-500 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="2"
+              fill="none"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 8v4m0 4h.01"
+            />
+          </svg>
+          {rejectionReason}
+        </div>
+      )}
     </div>
   );
 }

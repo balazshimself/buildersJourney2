@@ -8,16 +8,20 @@ import { ResponseTypes } from "@/types";
 export const runtime = "edge";
 
 const TEMPLATE = `You are an AI business plan evaluator for a startup simulation game. 
-The user has been presented with a business problem and has submitted their business plan solution.
+The user has been presented with a problem and has submitted their idea to solve said solution.
+You are also given the user's previous prompts to understand their thought process.
 
 PROBLEM STATEMENT:
 {problemStatement}
 
-USER'S BUSINESS PLAN:
+USER'S BUSINESS PLAN / IDEA:
 {businessPlan}
 
+USER'S PREVIOUS PROMPTS:
+{previousPrompts}
+
 Your task is to:
-1. Evaluate if this is a viable business plan that addresses the problem statement
+1. Evaluate if this is a viable idea that addresses the problem statement
 2. Create a formalized, well-structured version of the business plan
 3. If the plan is viable, create initial content for the three departments
 
@@ -34,7 +38,9 @@ BE CRITICAL of plans that are:
 - Are nonsensical or unrelated to the problem
 - Are extremely brief (less than 3 sentences)
 
-For inadequate plans, provide feedback in about 5 words, extremely short and to the point, so the user can improve it. Do not exceed 5 words.`;
+For inadequate plans, provide concrete, actionable feedback on how to improve them.
+This feedback will be shown to them directly, so speak in second person.
+Also, don't be overly polite. If they keep submitting bad plans, be firm and tell them to try harder.`;
 
 export interface ValidationAcceptedResponse {
   type: ResponseTypes.ACCEPTED;
@@ -76,7 +82,7 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { problemStatement, businessPlan } = body;
+    const { problemStatement, businessPlan, previousPrompts } = body;
 
     // Validate input
     if (!problemStatement || !businessPlan) {
@@ -136,7 +142,10 @@ export async function POST(
     const result = await chain.invoke({
       problemStatement: problemStatement,
       businessPlan: businessPlan,
+      previousPrompts: previousPrompts || [],
     });
+
+    console.log("Previous prompts:", previousPrompts);
 
     // Convert markdown to HTML using micromark
     if (result.result.type === ResponseTypes.ACCEPTED) {

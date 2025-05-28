@@ -70,7 +70,7 @@ export const CardChoiceTemplate: React.FC<{
   onSelectCard?: (card: CardData) => void;
   className?: string;
 }> = ({ data, onSelectCard, className }) => {
-  const { title, description, cards = [] } = data;
+  let { title, description, cards = [], selectedCardId } = data;
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -81,22 +81,40 @@ export const CardChoiceTemplate: React.FC<{
         </p>
       </div>
       <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-4 overflow-x-auto">
-        {cards.map((card, index) => (
-          <div
-            key={`card-${index}-${card.title}`}
-            className="p-4 rounded-lg border bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer min-w-[220px]"
-            onClick={() => onSelectCard && onSelectCard(card)}
-          >
-            <h3 className="text-lg font-semibold mb-1">{card.title}</h3>
-            <p className="text-sm text-gray-700 mb-3">{card.description}</p>
-            <button
-              className="mt-2 px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              type="button"
+        {cards.map((card, index) => {
+          const isSelected: boolean = !!card.id && card.id === selectedCardId;
+          return (
+            <div
+              key={`card-${index}-${card.title}`}
+              className={`p-4 rounded-lg border shadow-sm transition-shadow min-w-[220px] cursor-pointer ${
+                isSelected
+                  ? "bg-gray-200 opacity-50 pointer-events-none"
+                  : "bg-white shadow-md"
+              }`}
             >
-              {card.buttonString}
-            </button>
-          </div>
-        ))}
+              <h3 className="text-lg font-semibold mb-1">{card.title}</h3>
+              <p className="text-sm text-gray-700 mb-3">{card.description}</p>
+              <button
+                className={`mt-2 px-4 py-1 rounded transition ${
+                  isSelected
+                    ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+                type="button"
+                disabled={isSelected}
+                onClick={() => {
+                  if (!isSelected) {
+                    console.log("Card selected:", card);
+                    if (onSelectCard) onSelectCard(card);
+                    selectedCardId = card.id;
+                  }
+                }}
+              >
+                {card.buttonString}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
