@@ -15,6 +15,9 @@ BUSINESS PLAN:
 BUILD LOGS (Previous Actions):
 {buildLogs}
 
+COMPONENT INTERACTIONS (Card selections and progress states):
+{componentInteractions}
+
 When the player submits a business decision, do the following:
 
 1. If the decision is incoherent, irrelevant, implausible, or makes up information, REJECT it. Respond using the "Rejected response format" schema, providing a clear reason for rejection.
@@ -65,6 +68,13 @@ Accepted response format:
     "cost": number, // Cost of implementing the decision
     "monetary_return": number // Return on the action (can be negative)
   }}
+  "progressUpdates": [
+    {{
+      "templateId": string,
+      "newCheckpointIndex": number,
+      "reason": string
+    }}
+  ] // Optional: only include if progress should advance
 }}
 
 Rejected response format:
@@ -138,6 +148,8 @@ export async function POST(req: NextRequest) {
     // Extract business plan and build logs from request if available
     const businessPlan = body.businessPlan || "No business plan available.";
     const buildLogs = body.buildLogs || "No previous build logs available.";
+    const componentInteractions =
+      body.componentInteractions || "No component interactions yet.";
 
     const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
@@ -190,6 +202,12 @@ export async function POST(req: NextRequest) {
       .union([StaticTextTemplate, ProgressBarTemplate, ChoiceTemplate])
       .describe("Templates for the business simulation");
 
+    const ProgressUpdateSchema = z.object({
+      templateId: z.string(),
+      newCheckpointIndex: z.number(),
+      reason: z.string(),
+    });
+
     const AcceptedSchema = z.object({
       marketing: TemplateTemplate.nullable(),
       product: TemplateTemplate.nullable(),
@@ -208,6 +226,7 @@ export async function POST(req: NextRequest) {
           .number()
           .describe("The return on the action. Can be negative."),
       }),
+      progressUpdates: z.array(ProgressUpdateSchema).optional(),
     });
 
     const model = new ChatOpenAI({
@@ -244,6 +263,7 @@ export async function POST(req: NextRequest) {
       input: currentMessageContent,
       businessPlan: businessPlan,
       buildLogs: buildLogs,
+      componentInteractions: componentInteractions,
     });
 
     console.log("Chat API result:", result);

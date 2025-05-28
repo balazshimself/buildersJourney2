@@ -27,6 +27,11 @@ export type BuildResponse = {
       cost: number;
       monetary_return: number;
     };
+    progressUpdates?: {
+      templateId: string; // ID of the template to update
+      newCheckpointIndex: number; // New index to set for the progress bar
+      reason: string; // Reason for the update, used for logging
+    }[];
   };
 };
 
@@ -69,6 +74,67 @@ export function BuildSomethingPanel({
     }
   }, [response]);
 
+  // Function to collect all component interactions from the page
+  const collectComponentInteractions = () => {
+    const interactions = {
+      cardSelections: [] as {
+        componentIndex: number;
+        componentTitle: string;
+        selectedCard: { title: string; description: string };
+      }[],
+      progressStates: [] as {
+        componentIndex: number;
+        title: string;
+        currentProgress: number;
+        totalSteps: number;
+        progressPercentage: number;
+      }[],
+      timestamp: new Date().toISOString(),
+    };
+
+    // Find all card choice components and their selections
+    const cardComponents = document.querySelectorAll(
+      '[data-component-type="card-choice"]'
+    );
+    cardComponents.forEach((element, index) => {
+      const selectedCard = element.querySelector('[data-selected="true"]');
+      if (selectedCard) {
+        interactions.cardSelections.push({
+          componentIndex: index,
+          componentTitle: element.querySelector("h2")?.textContent || "Unknown",
+          selectedCard: {
+            title: selectedCard.querySelector("h3")?.textContent || "Unknown",
+            description:
+              selectedCard.querySelector("p")?.textContent || "Unknown",
+          },
+        });
+      }
+    });
+
+    // Find all progress bar components and their states
+    const progressComponents = document.querySelectorAll(
+      '[data-component-type="progress-bar"]'
+    );
+    progressComponents.forEach((element, index) => {
+      const title = element.querySelector("h3")?.textContent || "Unknown";
+      const progressText =
+        element.querySelector("[data-progress]")?.textContent || "0/0";
+      const [current, total] = progressText
+        .split("/")
+        .map((s) => parseInt(s.trim()) || 0);
+
+      interactions.progressStates.push({
+        componentIndex: index,
+        title,
+        currentProgress: current,
+        totalSteps: total,
+        progressPercentage: total > 0 ? (current / total) * 100 : 0,
+      });
+    });
+
+    return interactions;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim() || isLoading) return;
@@ -87,6 +153,28 @@ export function BuildSomethingPanel({
       )
         .map((el) => el.textContent)
         .join("\n\n");
+
+      const componentInteractions = collectComponentInteractions();
+
+      const interactionsText = `
+CARD SELECTIONS:
+${componentInteractions.cardSelections
+  .map(
+    (selection) =>
+      `- ${selection.componentTitle}: Selected "${selection.selectedCard.title}" - ${selection.selectedCard.description}`
+  )
+  .join("\n")}
+
+CURRENT PROGRESS:
+${componentInteractions.progressStates
+  .map(
+    (progress) =>
+      `- ${progress.title}: ${progress.currentProgress}/${
+        progress.totalSteps
+      } (${Math.round(progress.progressPercentage)}%)`
+  )
+  .join("\n")}
+      `.trim();
 
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -107,6 +195,7 @@ export function BuildSomethingPanel({
           ],
           content,
           buildLogs,
+          componentInteractions: interactionsText,
         }),
       });
 
@@ -130,10 +219,33 @@ export function BuildSomethingPanel({
     setHasDecided(true);
     updateCompanyValue(response.result.log.cost);
 
+    // NEW: Handle progress updates if provided
+    if (response.result.progressUpdates) {
+      response.result.progressUpdates.forEach((update) => {
+        // Find progress bar components and update them
+        const progressComponents = document.querySelectorAll(
+          '[data-component-type="progress-bar"]'
+        );
+        progressComponents.forEach((element, index) => {
+          const title = element.querySelector("h3")?.textContent || "";
+          if (
+            title.includes(update.templateId) ||
+            index.toString() === update.templateId
+          ) {
+            // Update the progress (you'd need to implement this based on your component structure)
+            console.log(
+              `Updating progress for ${title} to ${update.newCheckpointIndex}: ${update.reason}`
+            );
+          }
+        });
+      });
+    }
+
     onComplete({
       title: response.result.log.title,
       content: (
         <div className="space-y-4" key={response.result.log.title}>
+          {/* Your existing content rendering */}
           <div className="p-4 border-l-4 border-blue-500 bg-blue-50 rounded">
             <p className="font-bold mb-2">Business Decision:</p>
             <p className="mb-4">{prompt}</p>
@@ -143,6 +255,19 @@ export function BuildSomethingPanel({
             <p className="font-bold mb-2">Outcome:</p>
             <p className="mb-2">{response.result.log.content}</p>
           </div>
+
+          {/* Show progress updates if any */}
+          {response.result.progressUpdates &&
+            response.result.progressUpdates.length > 0 && (
+              <div className="p-4 border-l-4 border-purple-500 bg-purple-50 rounded">
+                <p className="font-bold mb-2">Progress Updates:</p>
+                {response.result.progressUpdates.map((update, index) => (
+                  <p key={index} className="text-sm">
+                    • {update.reason}
+                  </p>
+                ))}
+              </div>
+            )}
 
           <div className="grid grid-cols-3 gap-4 mt-4">
             {response.result.product && (
@@ -301,22 +426,6 @@ export function BuildSomethingPanel({
                 {response.result.log.title}
               </h3>
             </div>
-            {/* <div className="grid grid-cols-3 gap-4 mb-4 text-xs">
-              <div className="p-2 border rounded bg-white">
-                <div className="text-blue-700 font-semibold">PRODUCT</div>
-                <p className="mt-1">{response.result.product.content}</p>
-              </div>
-
-              <div className="p-2 border rounded bg-white">
-                <div className="text-green-700 font-semibold">MARKETING</div>
-                <p className="mt-1">{response.result.marketing.content}</p>
-              </div>
-
-              <div className="p-2 border rounded bg-white">
-                <div className="text-purple-700 font-semibold">MANAGEMENT</div>
-                <p className="mt-1">{response.result.management.content}</p>
-              </div>
-            </div> */}
 
             <div className="flex justify-between text-sm text-gray-600 mb-4">
               <div>
