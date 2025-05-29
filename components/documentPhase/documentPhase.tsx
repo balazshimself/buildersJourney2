@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { LogData } from "@/types";
-import { OptimizedTimer } from "@/components/optimizedTimer";
+import { OptimizedTimer } from "@/components/ui/optimizedTimer";
 import { SidebarLayout } from "@/components/documentPhase/sidebarLayout";
 import { DocumentEditor } from "@/components/documentPhase/documentEditor";
 import { useSpecializedDocuments } from "@/hooks/useSpecializedDocuments";
-import { GanttChart } from "@/components/projectTimeline";
+import { GanttChart } from "@/components/documentPhase/projectTimeline";
 import { GanttTask } from "@/types/gantt";
 
 interface DocumentPhaseProps {
@@ -38,7 +38,6 @@ export function DocumentPhase({
     businessPlan
   );
   const [calledEval, setCalledEval] = useState(false);
-  // Add timeline state here
   const [timelineTasks, setTimelineTasks] = useState<GanttTask[]>([]);
 
   useEffect(() => {

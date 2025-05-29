@@ -1,6 +1,6 @@
 import React from "react";
-import { TemplateRenderer } from "@/components/templates/templateCompontents";
-import { DocumentUpdate } from "../documentPhase/buildSomethingPanel";
+import { TemplateRenderer } from "@/components/documentPhase/templates/templateCompontents";
+import { DocumentUpdate } from "../buildSomethingPanel";
 import { CardData } from "@/types/templates";
 
 interface SpecializedDocumentViewProps {

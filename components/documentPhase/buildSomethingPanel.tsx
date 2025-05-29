@@ -5,7 +5,7 @@ import { Loader2, AlertTriangle, CheckCircle2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ResponseTypes, LogData } from "@/types";
-import { TemplateRenderer } from "../templates/templateCompontents";
+import { TemplateRenderer } from "./templates/templateCompontents";
 import { CardComponent } from "@/types/templates";
 
 export type DocumentUpdate = {
@@ -156,24 +156,21 @@ export function BuildSomethingPanel({
 
       const componentInteractions = collectComponentInteractions();
 
-      const interactionsText = `
-CARD SELECTIONS:
-${componentInteractions.cardSelections
-  .map(
-    (selection) =>
-      `- ${selection.componentTitle}: Selected "${selection.selectedCard.title}" - ${selection.selectedCard.description}`
-  )
-  .join("\n")}
-
-CURRENT PROGRESS:
-${componentInteractions.progressStates
-  .map(
-    (progress) =>
-      `- ${progress.title}: ${progress.currentProgress}/${
-        progress.totalSteps
-      } (${Math.round(progress.progressPercentage)}%)`
-  )
-  .join("\n")}
+      const interactionsText =
+        `CARD SELECTIONS:${componentInteractions.cardSelections
+          .map(
+            (selection) =>
+              `- ${selection.componentTitle}: Selected "${selection.selectedCard.title}" - ${selection.selectedCard.description}`
+          )
+          .join("\n")}
+          CURRENT PROGRESS:${componentInteractions.progressStates
+            .map(
+              (progress) =>
+                `- ${progress.title}: ${progress.currentProgress}/${
+                  progress.totalSteps
+                } (${Math.round(progress.progressPercentage)}%)`
+            )
+            .join("\n")}
       `.trim();
 
       const res = await fetch("/api/chat", {

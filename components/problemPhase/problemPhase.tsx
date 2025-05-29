@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Problem } from "@/types";
-import { OptimizedTimer } from "./optimizedTimer";
+import { OptimizedTimer } from "@/components/ui/optimizedTimer";
 import { Button } from "@/components/ui/button";
 
 interface ProblemPhaseProps {

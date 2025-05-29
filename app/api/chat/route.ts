@@ -7,7 +7,8 @@ import { TemplateType } from "@/types/templates";
 
 export const runtime = "edge";
 
-const TEMPLATE = `You are an AI assistant for a business simulation game. The player is building a garage-style startup. Your job is to evaluate the player's business decision and respond using the following schemas as templates.
+const TEMPLATE = `You are an AI assistant for a business simulation game. The player is building a garage-style startup.
+Your job is to evaluate the player's business decision and respond using the following schemas as templates.
 
 BUSINESS PLAN:
 {businessPlan}
@@ -20,13 +21,16 @@ COMPONENT INTERACTIONS (Card selections and progress states):
 
 When the player submits a business decision, do the following:
 
-1. If the decision is incoherent, irrelevant, implausible, or makes up information, REJECT it. Respond using the "Rejected response format" schema, providing a clear reason for rejection.
+1. If the decision is incoherent, irrelevant, implausible, or makes up information, REJECT it.
+Respond using the "Rejected response format" schema, providing a clear reason for rejection.
 
 2. If the decision is plausible and relevant, ACCEPT it. Respond using the "Accepted response format" schema, and generate 1-2 (or max 2-3) templates cards choosing from these schemas:
 - StaticTextTemplate: For general information or updates.
 - ProgressBarTemplate: For tracking progress or milestones.
 - ChoiceTemplate: For presenting the player with options or next steps.
 
+Make up information as needed, and ensure the player has choices and clear paths to choose from. Your task as this point is to simulate a likely impact of
+the player's decision. Be as specific as possible with information.
 For each area (marketing, product, management), you may return null if there is no meaningful update. Otherwise, use one of the above templates.
 
 SCHEMAS:
@@ -100,25 +104,125 @@ Response:
   "result": {{ "reason": "Incoherent prompt. Impossible to evaluate." }}
 }}
 
-2. Acceptance:
+2. Rejection:
 Player input: "I will launch a social media campaign."
 Response:
 {{
+  "type": "REJECTED",
+  "tone": "negative", 
+  "result": {{ "reason": "Social media campaigns can be effective, but this lacks specificity. What platforms will you use? What's your target demographic? What's your budget and content strategy? Without these details, it's impossible to predict realistic outcomes or costs." }}
+}}
+
+3. Acceptance:
+Player input: "I will launch a targeted Instagram campaign for working professionals aged 25-35, focusing on productivity pain points. Budget of $400 for 2 weeks of promoted posts, creating 10 carousel posts about common workplace challenges our product solves."
+Response:
+{{
   "type": "ACCEPTED",
-  "tone": "positive",
+  "tone": "neutral",
   "result": {{
     "marketing": {{
-      "type": "static_text",
-      "title": "Social Media Launch",
-      "text": "You launched a campaign targeting young adults on Instagram and TikTok. Early engagement is promising."
+      "type": "choice",
+      "title": "Content Performance Tracking",
+      "description": "Your first week of posts are live. Early data shows mixed results - productivity tips perform well, but product demos get low engagement.",
+      "cards": [
+        {{
+          "title": "Double Down on Tips",
+          "description": "Focus remaining budget on educational content that's performing well, build audience first",
+          "buttonString": "Pivot Strategy"
+        }},
+        {{
+          "title": "A/B Test Product Focus", 
+          "description": "Split remaining budget between tips and different product demo formats",
+          "buttonString": "Test Approach"
+        }},
+        {{
+          "title": "Influencer Collaboration",
+          "description": "Partner with a micro-influencer in productivity space for authentic endorsement",
+          "buttonString": "Find Partner"
+        }}
+      ]
     }},
     "product": null,
     "management": null,
     "log": {{
-      "title": "Social Media Campaign",
-      "content": "The campaign increased brand awareness and attracted early adopters. Costs were moderate, but ROI is expected to be positive.",
-      "cost": 550,
-      "monetary_return": 1200
+      "title": "Instagram Marketing Launch",
+      "content": "Campaign reached 2,400 professionals with 180 click-throughs to your landing page. Cost per click averaged $2.20. Educational content shows 3x higher engagement than direct product promotion. Generated 23 email signups and 3 demo requests. Performance suggests audience prefers value-first approach.",
+      "cost": 400,
+      "monetary_return": 280
+    }}
+  }}
+}}
+
+
+4. Acceptance:
+Player input: "I want to hire a part-time developer to help build our mobile app prototype. Budget around $2000 for a month of work."
+Response:
+{{
+  "type": "ACCEPTED", 
+  "tone": "positive",
+  "result": {{
+    "product": {{
+      "type": "progress_bar",
+      "title": "Mobile App Development",
+      "checkpointData": ["Requirements gathering", "UI mockups", "Core features", "Testing & debugging", "App store preparation"],
+      "reward": "Functional prototype ready for user testing"
+    }},
+    "management": {{
+      "type": "choice",
+      "title": "Developer Hiring Decision",
+      "description": "You've received applications from 3 candidates within your budget. Each brings different strengths to your project.",
+      "cards": [
+        {{
+          "title": "Sarah - React Native Expert",
+          "description": "3 years mobile dev experience, $50/hour, available 20 hrs/week. Strong portfolio but no startup experience.",
+          "buttonString": "Hire Sarah"
+        }},
+        {{
+          "title": "Marcus - Full-Stack Generalist", 
+          "description": "5 years experience, $45/hour, 25 hrs/week. Less mobile focus but has worked at 2 early-stage startups.",
+          "buttonString": "Hire Marcus"
+        }},
+        {{
+          "title": "Alex - Junior Developer",
+          "description": "1 year experience, $30/hour, 30 hrs/week. Eager learner, lower cost but will need more guidance.",
+          "buttonString": "Hire Alex"
+        }}
+      ]
+    }},
+    "marketing": null,
+    "log": {{
+      "title": "Developer Search Complete",
+      "content": "Posted job on 3 freelance platforms and received 12 applications. After initial screening calls, you've identified 3 viable candidates within budget. Each has different experience levels and hourly rates. Your choice will impact development speed, code quality, and how much oversight you'll need to provide.",
+      "cost": 150,
+      "monetary_return": 0
+    }}
+  }}
+}}
+
+5. Acceptance:
+Player input: "I want to build a basic website prototype to test our concept with potential customers. I'll use a website builder and spend about $500 on design and basic functionality."
+Response:
+{{
+  "type": "ACCEPTED",
+  "tone": "positive", 
+  "result": {{
+    "product": {{
+      "type": "progress_bar",
+      "title": "Website Prototype Development",
+      "checkpointData": ["Domain & hosting setup", "Choose template & branding", "Core pages creation", "Contact/signup forms", "Mobile optimization", "User testing prep"],
+      "reward": "$300 in early customer pre-orders"
+    }},
+    "marketing": {{
+      "type": "static_text",
+      "title": "Landing Page Strategy",
+      "text": "Your prototype website is taking shape with a clean, professional design. The value proposition is clear on the homepage, and you've set up basic analytics tracking. Early feedback from 5 friends suggests the pricing section needs work - visitors are confused about what's included in each tier."
+    }},
+    "management": null,
+    "log": {{
+      "title": "Website Prototype Build",
+      "content": "Selected Webflow as your platform and purchased a premium template ($89). Customized branding and created 5 core pages: home, features, pricing, about, and contact. Set up basic lead capture forms and Google Analytics. Estimated 2 weeks to complete with current pace of 1-2 hours daily work.",
+      "cost": 500,
+      "monetary_return": 0
     }}
   }}
 }}

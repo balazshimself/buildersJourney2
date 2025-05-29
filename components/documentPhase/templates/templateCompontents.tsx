@@ -6,7 +6,7 @@ import {
   ProgressBarTemplateData,
   StaticTextTemplateData,
   TemplateType,
-} from "../../types/templates";
+} from "../../../types/templates";
 
 // Static Text Template Component
 export const StaticTextTemplate: React.FC<{

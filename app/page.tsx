@@ -1,11 +1,11 @@
 "use client";
 
 import { useAppState } from "@/hooks/useAppState";
-import { RulesPhase } from "@/components/rulesPhase";
-import { ProblemPhase } from "@/components/problemPhase";
+import { RulesPhase } from "@/components/rulesPhase/rulesPhase";
+import { ProblemPhase } from "@/components/problemPhase/problemPhase";
 import { DocumentPhase } from "@/components/documentPhase/documentPhase";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { EvaluationPhase } from "@/components/evaluationPhase";
+import { EvaluationPhase } from "@/components/evaluationPhase/evaluationPhase";
 import { useState } from "react";
 import Script from "next/script";
 

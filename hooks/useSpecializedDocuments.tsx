@@ -6,7 +6,7 @@ import {
   CardChoiceTemplate,
   ProgressBarTemplate,
   StaticTextTemplate,
-} from "@/components/templates/templateCompontents";
+} from "@/components/documentPhase/templates/templateCompontents";
 import { TemplateType } from "@/types/templates";
 
 export function useSpecializedDocuments() {
@@ -112,13 +112,12 @@ export function useSpecializedDocuments() {
   // Count entries by type for badges/summaries
   const productStats = useMemo(
     () => ({
-      total: productEntries.length,
-      milestones: productEntries.filter(
+      progress: productEntries.filter(
         (e) => e.data.type === ProgressBarTemplate
       ).length,
-      updates: productEntries.filter((e) => e.data.type === CardChoiceTemplate)
+      choice: productEntries.filter((e) => e.data.type === CardChoiceTemplate)
         .length,
-      risks: productEntries.filter((e) => e.data.type === StaticTextTemplate)
+      update: productEntries.filter((e) => e.data.type === StaticTextTemplate)
         .length,
     }),
     [productEntries]
@@ -126,13 +125,12 @@ export function useSpecializedDocuments() {
 
   const marketingStats = useMemo(
     () => ({
-      total: marketingEntries.length,
-      milestones: productEntries.filter(
+      progress: marketingEntries.filter(
         (e) => e.data.type === ProgressBarTemplate
       ).length,
-      updates: productEntries.filter((e) => e.data.type === CardChoiceTemplate)
+      choice: marketingEntries.filter((e) => e.data.type === CardChoiceTemplate)
         .length,
-      risks: productEntries.filter((e) => e.data.type === StaticTextTemplate)
+      update: marketingEntries.filter((e) => e.data.type === StaticTextTemplate)
         .length,
     }),
     [marketingEntries]
@@ -140,14 +138,15 @@ export function useSpecializedDocuments() {
 
   const managementStats = useMemo(
     () => ({
-      total: managementEntries.length,
-      milestones: productEntries.filter(
+      progress: managementEntries.filter(
         (e) => e.data.type === ProgressBarTemplate
       ).length,
-      updates: productEntries.filter((e) => e.data.type === CardChoiceTemplate)
-        .length,
-      risks: productEntries.filter((e) => e.data.type === StaticTextTemplate)
-        .length,
+      choice: managementEntries.filter(
+        (e) => e.data.type === CardChoiceTemplate
+      ).length,
+      update: managementEntries.filter(
+        (e) => e.data.type === StaticTextTemplate
+      ).length,
     }),
     [managementEntries]
   );
@@ -166,6 +165,39 @@ export function useSpecializedDocuments() {
     }
   }, []);
 
+  function ManagementStatsBadges({
+    progress,
+    choice,
+    update,
+  }: {
+    progress: number;
+    choice: number;
+    update: number;
+  }) {
+    return (
+      <div className="flex gap-2">
+        <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+          {progress + choice + update} Total
+        </span>
+        {progress > 0 && (
+          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+            {progress} Progress
+          </span>
+        )}
+        {choice > 0 && (
+          <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">
+            {choice} Choice
+          </span>
+        )}
+        {update > 0 && (
+          <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-blue-800">
+            {update} Updates
+          </span>
+        )}
+      </div>
+    );
+  }
+
   // Functions to create each specialized document
   const showProductDocument = useCallback((): DocumentType => {
     return {
@@ -178,19 +210,11 @@ export function useSpecializedDocuments() {
               Product Development Tracker
             </h3>
             <div className="flex gap-2">
-              <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                {productStats.total} Total
-              </span>
-              {productStats.milestones > 0 && (
-                <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                  {productStats.milestones} Milestones
-                </span>
-              )}
-              {productStats.risks > 0 && (
-                <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">
-                  {productStats.risks} Risks
-                </span>
-              )}
+              <ManagementStatsBadges
+                progress={productStats.progress}
+                choice={productStats.choice}
+                update={productStats.update}
+              />
             </div>
           </div>
 
@@ -260,19 +284,11 @@ export function useSpecializedDocuments() {
               Marketing Strategy
             </h3>
             <div className="flex gap-2">
-              <span className="px-2 py-1 text-xs rounded-full bg-emerald-100 text-emerald-800">
-                {marketingStats.total} Total
-              </span>
-              {marketingStats.milestones > 0 && (
-                <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                  {marketingStats.milestones} Milestones
-                </span>
-              )}
-              {marketingStats.risks > 0 && (
-                <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">
-                  {marketingStats.risks} Risks
-                </span>
-              )}
+              <ManagementStatsBadges
+                progress={marketingStats.progress}
+                choice={marketingStats.choice}
+                update={marketingStats.update}
+              />
             </div>
           </div>
 
@@ -295,21 +311,21 @@ export function useSpecializedDocuments() {
                     <span
                       className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
                         entry.data.type === ProgressBarTemplate
-                          ? "milestone"
+                          ? "progress"
                           : entry.data.type === CardChoiceTemplate
-                          ? "update"
+                          ? "choice"
                           : entry.data.type === StaticTextTemplate
-                          ? "risk"
-                          : "other"
+                          ? "update"
+                          : "unknown"
                       )}`}
                     >
                       {entry.data.type === ProgressBarTemplate
-                        ? "milestone"
+                        ? "progress"
                         : entry.data.type === CardChoiceTemplate
-                        ? "update"
+                        ? "choice"
                         : entry.data.type === StaticTextTemplate
-                        ? "risk"
-                        : "other"}
+                        ? "update"
+                        : "unknown"}
                     </span>
                   </div>
                   {entry.data}
@@ -341,19 +357,11 @@ export function useSpecializedDocuments() {
               Management Dashboard
             </h3>
             <div className="flex gap-2">
-              <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
-                {managementStats.total} Total
-              </span>
-              {managementStats.milestones > 0 && (
-                <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                  {managementStats.milestones} Milestones
-                </span>
-              )}
-              {managementStats.risks > 0 && (
-                <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">
-                  {managementStats.risks} Risks
-                </span>
-              )}
+              <ManagementStatsBadges
+                progress={managementStats.progress}
+                choice={managementStats.choice}
+                update={managementStats.update}
+              />
             </div>
           </div>
 
