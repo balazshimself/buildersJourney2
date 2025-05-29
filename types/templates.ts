@@ -22,6 +22,7 @@ export type CardData = {
   title: string;
   description: string;
   buttonString: string;
+  id?: string; // Optional ID for tracking selected cards
 };
 
 export type CardChoiceTemplateData = {
@@ -29,6 +30,7 @@ export type CardChoiceTemplateData = {
   title: string;
   description: string;
   cards: CardData[];
+  selectedCardId?: string;
 };
 
 export type CardComponent =

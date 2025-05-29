@@ -3,17 +3,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { cn } from "@/lib/utils";
-import { GanttTask } from "@/types";
+import { GanttChartProps, GanttTask } from "@/types/gantt";
 
 // Define types for the Gantt chart tasks
-
-interface GanttChartProps {
-  tasks: GanttTask[];
-  className?: string;
-  onTaskClick?: (task: GanttTask) => void;
-  onDateChange?: (task: GanttTask, start: Date, end: Date) => void;
-  onProgressChange?: (task: GanttTask, progress: number) => void;
-}
 
 export function GanttChart({
   tasks,

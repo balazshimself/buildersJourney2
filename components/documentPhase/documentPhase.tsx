@@ -1,25 +1,25 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Document, GanttTask } from "@/types";
+import { Document } from "@/types";
 import { OptimizedTimer } from "@/components/optimizedTimer";
 import { SidebarLayout } from "@/components/documentPhase/sidebarLayout";
 import { DocumentEditor } from "@/components/documentPhase/documentEditor";
 import { useSpecializedDocuments } from "@/hooks/useSpecializedDocuments";
+import { GanttChart } from "@/components/projectTimeline";
+import { GanttChartData, GanttTask } from "@/types/gantt";
 
 interface DocumentPhaseProps {
   businessPlan: Document | null;
   logs: Document[];
   timer: number;
-  timeline: GanttTask[];
+  companyValue: number;
   onUpdateDocument: (id: string, updates: Partial<Document>) => void;
   onAddDocument: (
     document: Omit<Document, "id" | "position" | "visible" | "createdAt">
   ) => void;
   onTimerChange: (time: number) => void;
-  setTimeLine: (timeline: GanttTask[]) => void;
   startEvaluationPhase: () => void;
-  companyValue: number;
   updateCompanyValue: (value: number) => void;
 }
 
@@ -27,19 +27,58 @@ export function DocumentPhase({
   businessPlan,
   logs: documents,
   timer,
-  timeline,
+  companyValue,
   onUpdateDocument,
   onAddDocument,
   onTimerChange,
-  setTimeLine,
   startEvaluationPhase,
-  companyValue,
   updateCompanyValue,
 }: DocumentPhaseProps) {
   const [activeDocument, setActiveDocument] = useState<Document | null>(
     businessPlan
   );
   const [calledEval, setCalledEval] = useState(false);
+
+  const [ganttChartData, setGanttChartData] = useState<GanttChartData | null>(
+    null
+  );
+
+  useEffect(() => {
+    console.log("Gantt chart data updated:", ganttChartData);
+  }, [ganttChartData]);
+
+  const setTimeline = (timeline: GanttTask[], summary?: string) => {
+    setGanttChartData({
+      tasks: timeline,
+      summary: summary ?? "Project Timeline",
+      generatedAt: new Date(),
+    });
+  };
+
+  const [ganttChart, setGanttChart] = useState<JSX.Element>(
+    <GanttChart
+      businessPlan={businessPlan}
+      showControls={true}
+      cardTitle="Project Timeline"
+      cardDescription="Track your milestones"
+    />
+  );
+
+  const handleTimelineClick = () => {
+    // Initialize the ProjectTimeline component
+    const timelineDoc = {
+      id: `project-timeline-${Date.now()}`,
+      type: "timeline" as const,
+      title: "Project Timeline",
+      content: ganttChart,
+      editable: false,
+      visible: true,
+      createdAt: new Date(),
+      position: 0,
+    };
+
+    setActiveDocument(timelineDoc);
+  };
 
   const {
     addProductEntry,
@@ -194,30 +233,6 @@ export function DocumentPhase({
     );
   };
 
-  const handleTimelineClick = () => {
-    import("@/components/projectTimeline").then(({ ProjectTimeline }) => {
-      // Initialize the ProjectTimeline component
-      const timelineDoc = {
-        id: `project-timeline-${Date.now()}`,
-        type: "timeline" as const,
-        title: "Project Timeline",
-        content: (
-          <ProjectTimeline
-            timeline={timeline}
-            businessPlan={businessPlan}
-            setTimeline={setTimeLine}
-          />
-        ),
-        editable: false,
-        visible: true,
-        createdAt: new Date(),
-        position: 0,
-      };
-
-      setActiveDocument(timelineDoc);
-    });
-  };
-
   // Clear notification when clicking on a document
   const handleDocumentClick = (doc: Document) => {
     setActiveDocument(doc);
@@ -234,10 +249,10 @@ export function DocumentPhase({
         activeDocument={activeDocument}
         onDocumentClick={handleDocumentClick}
         onBuildSomethingClick={handleBuildSomethingClick}
-        onTimelineClick={handleTimelineClick}
         onShowProductDocument={showProductDocument}
         onShowMarketingDocument={showMarketingDocument}
         onShowManagementDocument={showManagementDocument}
+        handleTimelineClick={handleTimelineClick}
       />
       {/* Main content on the right */}
       <div className="flex-1 flex flex-col h-full min-w-0">

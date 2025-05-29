@@ -217,7 +217,7 @@ ${componentInteractions.progressStates
   const handleAccept = () => {
     if (!response || !response.result.log) return;
     setHasDecided(true);
-    updateCompanyValue(response.result.log.cost);
+    updateCompanyValue(-(response.result.log.cost + 10));
 
     // NEW: Handle progress updates if provided
     if (response.result.progressUpdates) {

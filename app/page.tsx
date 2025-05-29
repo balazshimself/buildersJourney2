@@ -18,7 +18,6 @@ export default function Home() {
     addDocument,
     updateDocument,
     updateTimer,
-    setTimeline,
     updateCompanyValue,
   } = useAppState();
 
@@ -52,11 +51,11 @@ export default function Home() {
               logs={state.logs}
               businessPlan={state.businessPlan}
               timer={state.timer}
-              timeline={state.timeline}
+              // timeline={state.timeline}
               onUpdateDocument={updateDocument}
               onAddDocument={addDocument}
               onTimerChange={updateTimer}
-              setTimeLine={setTimeline}
+              // setTimeLine={handleTimelineUpdate}
               startEvaluationPhase={startEvaluationPhase}
               companyValue={state.companyValue}
               updateCompanyValue={updateCompanyValue}

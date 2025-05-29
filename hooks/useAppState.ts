@@ -14,7 +14,6 @@ const INITIAL_STATE: AppState = {
   timer: 0,
   rejectionReason: undefined,
   isLoading: false,
-  timeline: [],
   companyValue: 5000,
 };
 
@@ -35,17 +34,6 @@ export const useAppState = () => {
       isLoading: false,
     });
   }, [state]);
-
-  const setTimeline = useCallback(
-    (timeline: AppState["timeline"]) => {
-      setState({
-        ...state,
-        timeline,
-      });
-      console.log("Setting timeline!");
-    },
-    [state]
-  );
 
   const updateCompanyValue = useCallback(
     (value: number) => {
@@ -209,7 +197,6 @@ export const useAppState = () => {
     addDocument,
     updateDocument,
     updateTimer,
-    setTimeline,
     updateCompanyValue,
   };
 };

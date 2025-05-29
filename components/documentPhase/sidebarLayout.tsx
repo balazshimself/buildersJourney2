@@ -38,7 +38,7 @@ interface SidebarLayoutProps {
   activeDocument: DocumentType | null;
   onDocumentClick: (doc: DocumentType) => void;
   onBuildSomethingClick: () => void;
-  onTimelineClick: () => void;
+  handleTimelineClick: () => void;
   onShowProductDocument: () => DocumentType;
   onShowMarketingDocument: () => DocumentType;
   onShowManagementDocument: () => DocumentType;
@@ -51,7 +51,7 @@ export function SidebarLayout({
   activeDocument,
   onDocumentClick,
   onBuildSomethingClick,
-  onTimelineClick,
+  handleTimelineClick,
   onShowProductDocument,
   onShowMarketingDocument,
   onShowManagementDocument,
@@ -228,7 +228,7 @@ export function SidebarLayout({
             "bg-white border border-gray-300",
             "hover:bg-gray-50 text-gray-700 transition-colors"
           )}
-          onClick={onTimelineClick}
+          onClick={handleTimelineClick}
         >
           <ClockIcon className="h-4 w-4 text-gray-500" />
           <span>Project Timeline</span>
