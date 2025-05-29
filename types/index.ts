@@ -14,7 +14,7 @@ export interface Problem {
   marketAnalysis: string;
 }
 
-export interface Document {
+export interface LogData {
   id: string;
   title: string;
   content: React.ReactNode;
@@ -34,10 +34,10 @@ export interface AppState {
   marketingCards: CardComponent[];
   productCards: CardComponent[];
   managementCards: CardComponent[];
-  logs: Document[];
+  logs: LogData[];
   rejectionReason?: string;
   timer: number;
   isLoading: boolean;
-  businessPlan: Document | null;
+  businessPlan: LogData | null;
   companyValue: number;
 }

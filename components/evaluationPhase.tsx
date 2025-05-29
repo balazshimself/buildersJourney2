@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Document } from "@/types";
+import { LogData } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -41,8 +41,8 @@ interface EvaluationData {
 }
 
 interface EvaluationPhaseProps {
-  businessPlan: Document | null;
-  logs: Document[];
+  businessPlan: LogData | null;
+  logs: LogData[];
   companyValue: number;
   onRestart?: () => void;
 }

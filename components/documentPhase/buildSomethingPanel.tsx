@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, AlertTriangle, CheckCircle2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ResponseTypes, Document } from "@/types";
+import { ResponseTypes, LogData } from "@/types";
 import { TemplateRenderer } from "../templates/templateCompontents";
 import { CardComponent } from "@/types/templates";
 
@@ -49,7 +49,7 @@ interface BuildSomethingPanelProps {
   }) => void;
   updateCompanyValue: (value: number) => void;
   companyValue: number;
-  businessPlan: Document | null;
+  businessPlan: LogData | null;
 }
 
 export function BuildSomethingPanel({

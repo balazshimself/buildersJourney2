@@ -1,6 +1,6 @@
 "use client";
 
-import { Document as DocumentType } from "@/types";
+import { LogData as DocumentType } from "@/types";
 import {
   Accordion,
   AccordionContent,

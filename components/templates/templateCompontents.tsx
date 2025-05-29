@@ -107,13 +107,15 @@ export const CardChoiceTemplate: React.FC<{
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Component JSX remains the same... */}
-      <div className="mb-4 border-b pb-2">
-        <h2 className="text-xl font-bold mb-1">{title ?? "NO TITLE"}</h2>
-        <p className="text-base text-gray-600">
-          {description ?? "NO DESCRIPTION"}
-        </p>
+      <div className="border-b pb-2 flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-bold mb-1">{title ?? "NO TITLE"}</h2>
+          <p className="text-base text-gray-600">
+            {description ?? "NO DESCRIPTION"}
+          </p>
+        </div>
         {selectedCardId && (
-          <div className="mt-2 text-sm text-green-600 font-medium">
+          <div className="text-sm text-green-600 font-medium">
             ✓ Decision locked in
           </div>
         )}
@@ -170,7 +172,6 @@ export const TemplateRenderer: React.FC<{
   onSelectCard?: (card: CardData | null) => void;
   className?: string;
 }> = ({ template, onSelectCard, className }) => {
-  console.log("here is something: ", template);
   switch (template.type) {
     case TemplateType.StaticText:
       return <StaticTextTemplate data={template} className={className} />;

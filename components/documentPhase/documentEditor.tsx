@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Document as DocumentType } from "@/types";
+import { LogData as DocumentType } from "@/types";
 
 interface DocumentEditorProps {
   activeDocument: DocumentType | null;

@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Script from "next/script";
 import { cn } from "@/lib/utils";
-import { Document } from "@/types";
+import { LogData } from "@/types";
 import {
   Card,
   CardContent,
@@ -17,10 +16,12 @@ import { GanttTask } from "@/types/gantt";
 
 interface GanttChartProps {
   className?: string;
-  businessPlan?: Document | null;
+  businessPlan?: LogData | null;
   showControls?: boolean;
   cardTitle?: string;
   cardDescription?: string;
+  tasks: GanttTask[];
+  onTasksUpdate: (tasks: GanttTask[]) => void;
   onTaskClick?: (task: GanttTask) => void;
   onDateChange?: (task: GanttTask, start: Date, end: Date) => void;
   onProgressChange?: (task: GanttTask, progress: number) => void;
@@ -29,6 +30,8 @@ interface GanttChartProps {
 export function GanttChart({
   className,
   businessPlan,
+  tasks = [],
+  onTasksUpdate,
   showControls = false,
   cardTitle = "Project Timeline",
   cardDescription = "Track your project milestones and progress",
@@ -38,27 +41,30 @@ export function GanttChart({
 }: GanttChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const ganttInstanceRef = useRef<any>(null);
-  const [isLibraryLoaded, setIsLibraryLoaded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const [ganttTasks, setGanttTasks] = useState<GanttTask[]>([]);
-
   useEffect(() => {
-    console.log("Gantt tasks updated:", ganttTasks);
-  }, [ganttTasks]);
+    console.log("Initializing Gantt chart with tasks:", tasks, containerRef);
 
-  // Initialize Gantt chart once library and DOM are loaded
-  useEffect(() => {
-    if (!isLibraryLoaded || !containerRef.current) return;
+    if (!containerRef.current) return;
 
     // Check if Frappe Gantt is available
     if (typeof window !== "undefined" && window.Gantt) {
+      // Clear any existing instance first
       if (ganttInstanceRef.current) {
-        // Refresh the chart if we already have an instance
-        ganttInstanceRef.current.refresh(ganttTasks);
-      } else {
-        // Create new Gantt instance
-        const gantt = new window.Gantt(containerRef.current, ganttTasks, {
+        ganttInstanceRef.current = null;
+      }
+
+      // Always create a new instance (especially important when tasks exist)
+      if (tasks.length > 0 || !ganttInstanceRef.current) {
+        // Clear the container
+        if (containerRef.current) {
+          containerRef.current.innerHTML = "";
+        }
+
+        console.log("Creating new Gantt chart instance with tasks:", tasks);
+
+        const gantt = new window.Gantt(containerRef.current, tasks, {
           on_click: onTaskClick,
           on_date_change: onDateChange,
           on_progress_change: onProgressChange,
@@ -85,29 +91,33 @@ export function GanttChart({
         ganttInstanceRef.current = gantt;
       }
     }
-  }, [
-    ganttTasks,
-    isLibraryLoaded,
-    onTaskClick,
-    onDateChange,
-    onProgressChange,
-  ]);
+  }, [tasks, onTaskClick, onDateChange, onProgressChange]);
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      console.log("Cleaning up Gantt chart instance");
+      if (ganttInstanceRef.current) {
+        ganttInstanceRef.current = null;
+      }
+    };
+  }, []);
 
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       if (ganttInstanceRef.current) {
-        ganttInstanceRef.current.refresh(ganttTasks);
+        ganttInstanceRef.current.refresh(tasks);
       }
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [ganttTasks]);
+  }, [tasks]);
 
   // Generate AI tasks based on business plan
   const generateAITasks = async () => {
-    if (!setGanttTasks) return;
+    if (!onTasksUpdate) return;
 
     setIsGenerating(true);
 
@@ -142,21 +152,15 @@ export function GanttChart({
           end: new Date(task.end),
         }));
 
-        setGanttTasks(formattedTasks);
+        onTasksUpdate(formattedTasks);
       }
     } catch (error) {
       console.error("Error generating timeline:", error);
       // Fallback to default tasks if generation fails
-      setGanttTasks(generateDefaultTasks());
+      onTasksUpdate(generateDefaultTasks());
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  // Handle task click
-  const handleTaskClick = (task: GanttTask) => {
-    console.log("Task clicked:", task);
-    onTaskClick?.(task);
   };
 
   // Generate default tasks for the timeline
@@ -219,16 +223,6 @@ export function GanttChart({
 
   const chartContent = (
     <>
-      {/* Load Frappe Gantt script and styles */}
-      <Script
-        src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"
-        onLoad={() => setIsLibraryLoaded(true)}
-      />
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.css"
-      />
-
       {/* Custom styles for better integration */}
       <style jsx global>{`
         .gantt .bar-wrapper {
@@ -270,7 +264,7 @@ export function GanttChart({
           fill: rgba(79, 70, 229, 0.1);
         }
       `}</style>
-      {ganttTasks.length > 0 ? (
+      {tasks.length > 0 ? (
         <div
           ref={containerRef}
           className={cn(
@@ -307,7 +301,7 @@ export function GanttChart({
                 size="sm"
                 onClick={generateAITasks}
                 className="ml-4"
-                disabled={isGenerating || !setGanttTasks}
+                disabled={isGenerating || !onTasksUpdate}
               >
                 {isGenerating ? (
                   <>
@@ -331,11 +325,4 @@ export function GanttChart({
 
   // Otherwise, return just the chart
   return chartContent;
-}
-
-// Add type definitions for the Frappe Gantt library
-declare global {
-  interface Window {
-    Gantt: any;
-  }
 }

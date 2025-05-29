@@ -7,6 +7,14 @@ import { DocumentPhase } from "@/components/documentPhase/documentPhase";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { EvaluationPhase } from "@/components/evaluationPhase";
 import { useState } from "react";
+import Script from "next/script";
+
+// Add type definitions for the Frappe Gantt library
+declare global {
+  interface Window {
+    Gantt: any;
+  }
+}
 
 export default function Home() {
   const {
@@ -49,16 +57,23 @@ export default function Home() {
           <SidebarProvider>
             <DocumentPhase
               logs={state.logs}
-              businessPlan={state.businessPlan}
               timer={state.timer}
-              // timeline={state.timeline}
-              onUpdateDocument={updateDocument}
+              businessPlan={state.businessPlan}
+              companyValue={state.companyValue}
               onAddDocument={addDocument}
               onTimerChange={updateTimer}
-              // setTimeLine={handleTimelineUpdate}
+              onUpdateDocument={updateDocument}
               startEvaluationPhase={startEvaluationPhase}
-              companyValue={state.companyValue}
               updateCompanyValue={updateCompanyValue}
+            />
+            {/* Load Frappe Gantt script and styles */}
+            <Script
+              src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"
+              // onLoad={() => setIsLibraryLoaded(true)}
+            />
+            <link
+              rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.css"
             />
           </SidebarProvider>
         );

@@ -1,22 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Document } from "@/types";
+import { LogData } from "@/types";
 import { OptimizedTimer } from "@/components/optimizedTimer";
 import { SidebarLayout } from "@/components/documentPhase/sidebarLayout";
 import { DocumentEditor } from "@/components/documentPhase/documentEditor";
 import { useSpecializedDocuments } from "@/hooks/useSpecializedDocuments";
 import { GanttChart } from "@/components/projectTimeline";
-import { GanttChartData, GanttTask } from "@/types/gantt";
+import { GanttTask } from "@/types/gantt";
 
 interface DocumentPhaseProps {
-  businessPlan: Document | null;
-  logs: Document[];
+  businessPlan: LogData | null;
+  logs: LogData[];
   timer: number;
   companyValue: number;
-  onUpdateDocument: (id: string, updates: Partial<Document>) => void;
+  onUpdateDocument: (id: string, updates: Partial<LogData>) => void;
   onAddDocument: (
-    document: Omit<Document, "id" | "position" | "visible" | "createdAt">
+    document: Omit<LogData, "id" | "position" | "visible" | "createdAt">
   ) => void;
   onTimerChange: (time: number) => void;
   startEvaluationPhase: () => void;
@@ -34,43 +34,34 @@ export function DocumentPhase({
   startEvaluationPhase,
   updateCompanyValue,
 }: DocumentPhaseProps) {
-  const [activeDocument, setActiveDocument] = useState<Document | null>(
+  const [activeDocument, setActiveDocument] = useState<LogData | null>(
     businessPlan
   );
   const [calledEval, setCalledEval] = useState(false);
-
-  const [ganttChartData, setGanttChartData] = useState<GanttChartData | null>(
-    null
-  );
+  // Add timeline state here
+  const [timelineTasks, setTimelineTasks] = useState<GanttTask[]>([]);
 
   useEffect(() => {
-    console.log("Gantt chart data updated:", ganttChartData);
-  }, [ganttChartData]);
-
-  const setTimeline = (timeline: GanttTask[], summary?: string) => {
-    setGanttChartData({
-      tasks: timeline,
-      summary: summary ?? "Project Timeline",
-      generatedAt: new Date(),
-    });
-  };
-
-  const [ganttChart, setGanttChart] = useState<JSX.Element>(
-    <GanttChart
-      businessPlan={businessPlan}
-      showControls={true}
-      cardTitle="Project Timeline"
-      cardDescription="Track your milestones"
-    />
-  );
+    handleTimelineClick();
+  }, [timelineTasks]);
 
   const handleTimelineClick = () => {
+    console.log("Timeline tasks to init with:", timelineTasks);
     // Initialize the ProjectTimeline component
     const timelineDoc = {
       id: `project-timeline-${Date.now()}`,
       type: "timeline" as const,
       title: "Project Timeline",
-      content: ganttChart,
+      content: (
+        <GanttChart
+          businessPlan={businessPlan}
+          showControls={true}
+          cardTitle="Project Timeline"
+          cardDescription="Track your milestones"
+          tasks={timelineTasks}
+          onTasksUpdate={setTimelineTasks}
+        />
+      ),
       editable: false,
       visible: true,
       createdAt: new Date(),
@@ -234,7 +225,7 @@ export function DocumentPhase({
   };
 
   // Clear notification when clicking on a document
-  const handleDocumentClick = (doc: Document) => {
+  const handleDocumentClick = (doc: LogData) => {
     setActiveDocument(doc);
   };
 

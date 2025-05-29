@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { AppState, Document } from "@/types";
+import { AppState, LogData } from "@/types";
 import problemsData from "@/data/problems.json";
 import { ValidationResponse } from "@/app/api/validateBusinessPlan/route";
 
@@ -49,7 +49,7 @@ export const useAppState = () => {
   const startDocumentPhase = useCallback(
     (result: any) => {
       // Create the business plan document
-      const businessPlan: Document = {
+      const businessPlan: LogData = {
         id: "business-plan",
         title: "Business Plan",
         content: result.formalizedPlan,
@@ -151,8 +151,8 @@ export const useAppState = () => {
   );
 
   const addDocument = useCallback(
-    (document: Omit<Document, "id" | "visible" | "createdAt">) => {
-      const newDocument: Document = {
+    (document: Omit<LogData, "id" | "visible" | "createdAt">) => {
+      const newDocument: LogData = {
         ...document,
         id: `doc-${Math.random().toString(36).substr(2, 9)}`,
         createdAt: new Date(),
@@ -167,7 +167,7 @@ export const useAppState = () => {
   );
 
   const updateDocument = useCallback(
-    (id: string, updates: Partial<Document>) => {
+    (id: string, updates: Partial<LogData>) => {
       setState({
         ...state,
         logs: state.logs.map((doc) =>

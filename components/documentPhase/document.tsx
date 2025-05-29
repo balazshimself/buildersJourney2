@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Document as DocumentType } from "@/types";
+import { LogData as DocumentType } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface DocumentProps {
