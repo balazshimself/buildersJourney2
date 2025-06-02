@@ -388,8 +388,10 @@ export function BuildSomethingPanel({
         <textarea
           value={prompt}
           onChange={(e) => {
-            setPrompt(e.target.value);
-            if (response) setResponse(null);
+            if (e.target.value.length < 500) {
+              setPrompt(e.target.value);
+              if (response) setResponse(null);
+            }
           }}
           placeholder="I want to build..."
           className="border rounded-md p-3 w-full h-32 resize-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"

@@ -61,32 +61,29 @@ export function OptimizedTimer({
     setIsComplete(false);
   };
 
-  // Use a worker interval approach to avoid performance issues
   useEffect(() => {
     let lastUpdateTime = Date.now();
     let animationFrameId: number;
+    let isActive = true; // Add cleanup flag
 
     const updateTimer = () => {
+      if (!isActive) return; // Check if component is still mounted
+
       const now = Date.now();
       const deltaTime = now - lastUpdateTime;
 
-      // Only update if at least 1 second has passed (1000ms)
       if (isRunningRef.current && deltaTime >= 1000) {
-        // Calculate how many seconds to subtract (handles pauses more than 1s)
         const secondsToSubtract = Math.floor(deltaTime / 1000);
         const newTime = Math.max(0, timeRef.current - secondsToSubtract);
 
-        // Only update state if the time has changed
         if (newTime !== timeRef.current) {
           timeRef.current = newTime;
           setTime(newTime);
 
-          // Notify parent of time change
           if (onTimeChangeRef.current) {
             onTimeChangeRef.current(newTime);
           }
 
-          // Check if timer completed
           if (newTime === 0 && isRunningRef.current) {
             isRunningRef.current = false;
             setIsRunning(false);
@@ -97,19 +94,20 @@ export function OptimizedTimer({
             }
           }
 
-          lastUpdateTime = now - (deltaTime % 1000); // Adjust for remainder
+          lastUpdateTime = now - (deltaTime % 1000);
         }
       }
 
-      // Continue the timer loop
-      animationFrameId = requestAnimationFrame(updateTimer);
+      if (isActive) {
+        // Only continue if still active
+        animationFrameId = requestAnimationFrame(updateTimer);
+      }
     };
 
-    // Start the timer loop
     animationFrameId = requestAnimationFrame(updateTimer);
 
-    // Clean up
     return () => {
+      isActive = false; // Set cleanup flag
       cancelAnimationFrame(animationFrameId);
     };
   }, []);

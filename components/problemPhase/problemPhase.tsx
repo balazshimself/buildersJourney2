@@ -45,14 +45,19 @@ export function ProblemPhase({
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-semibold">Problem Statement</h1>
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={testEvaluate}
-            className="text-sm"
-          >
-            Dev Skip
-          </Button>
+          {process.env.NODE_ENV === "development" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                console.log("Dev Skip clicked");
+                testEvaluate?.();
+              }}
+              className="text-sm bg-red-300"
+            >
+              Dev Skip
+            </Button>
+          )}
           <OptimizedTimer
             initialTime={timer}
             autoStart={true}
@@ -90,14 +95,13 @@ export function ProblemPhase({
             value={userSolution}
             onChange={(e) => onSolutionChange(e.target.value)}
             disabled={isValidating}
-            placeholder="Write your business plan here. Be thoughtful and consider all aspects of the problem. 
-            Your response will be evaluated for soundness and creativity."
+            placeholder="Write your business plan here. Be thoughtful and consider all aspects of the problem. Your response will be evaluated for soundness and creativity."
             className="flex-grow p-4 border border-gray-300 rounded-md resize-none text-sm"
           />
 
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-gray-500">
-              {userSolution.length} characters
+              {userSolution.length} / 1500 characters
             </div>
             <Button
               onClick={() => {

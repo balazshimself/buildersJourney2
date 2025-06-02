@@ -4,6 +4,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { micromark } from "micromark";
 import { ResponseTypes } from "@/types";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "edge";
 
@@ -69,6 +70,17 @@ export type ValidationResponse =
 export async function POST(
   req: NextRequest
 ): Promise<NextResponse<ValidationResponse>> {
+  if (!rateLimit(req, 5, 60000)) {
+    // 5 requests per minute
+    return NextResponse.json(
+      {
+        type: ResponseTypes.REJECTED,
+        reason: "Too many requests. Please wait.",
+      },
+      { status: 429 }
+    );
+  }
+
   try {
     // Ensure API key is set
     if (!process.env.OPENAI_API_KEY) {

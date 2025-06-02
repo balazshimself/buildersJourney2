@@ -8,7 +8,7 @@ import { DocumentEditor } from "@/components/documentPhase/documentEditor";
 import { useSpecializedDocuments } from "@/hooks/useSpecializedDocuments";
 import { GanttChart } from "@/components/documentPhase/projectTimeline";
 import { GanttTask } from "@/types/gantt";
-
+import { Button } from "../ui/button";
 interface DocumentPhaseProps {
   businessPlan: LogData | null;
   logs: LogData[];
@@ -254,12 +254,27 @@ export function DocumentPhase({
               <h2 className="font-semibold">
                 {activeDocument?.title || "Select a document"}
               </h2>
-              <OptimizedTimer
-                initialTime={timer}
-                autoStart={true}
-                onTimeChange={onTimerChange}
-                className="min-w-28"
-              />
+              <div className="flex items-center space-x-4">
+                {process.env.NODE_ENV === "development" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      console.log("Dev Skip clicked");
+                      startEvaluationPhase();
+                    }}
+                    className="text-sm bg-red-300"
+                  >
+                    Dev Skip
+                  </Button>
+                )}
+                <OptimizedTimer
+                  initialTime={timer}
+                  autoStart={true}
+                  onTimeChange={onTimerChange}
+                  className="min-w-28"
+                />
+              </div>
             </div>
           </div>
         </div>

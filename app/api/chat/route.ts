@@ -4,6 +4,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ResponseTypes } from "@/types";
 import { TemplateType } from "@/types/templates";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "edge";
 
@@ -236,6 +237,17 @@ Player's business decision:
 export interface ChatResponse {}
 
 export async function POST(req: NextRequest) {
+  // Rate limiting
+  if (!rateLimit(req, 5, 60000)) {
+    // 5 requests per minute
+    return NextResponse.json(
+      {
+        type: ResponseTypes.REJECTED,
+        reason: "Too many requests. Please wait.",
+      },
+      { status: 429 }
+    );
+  }
   try {
     // Ensure API key is set
     if (!process.env.OPENAI_API_KEY) {

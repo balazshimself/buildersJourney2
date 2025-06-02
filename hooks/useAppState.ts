@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppState, LogData } from "@/types";
 import problemsData from "@/data/problems.json";
 import { ValidationResponse } from "@/app/api/validateBusinessPlan/route";
@@ -26,13 +26,13 @@ export const useAppState = () => {
     );
     const selectedProblem = problemsData.problems[randomIndex];
 
-    setState({
-      ...state,
+    setState((prevState) => ({
+      ...prevState,
       currentPhase: "problem",
       currentProblem: selectedProblem,
-      timer: 300, // 5 minutes in seconds
+      timer: 300,
       isLoading: false,
-    });
+    }));
   }, [state]);
 
   const updateCompanyValue = useCallback(
@@ -59,14 +59,14 @@ export const useAppState = () => {
         },
       };
 
-      setState({
-        ...state,
+      setState((prevState) => ({
+        ...prevState,
         currentPhase: "document",
         logs: [],
         businessPlan: businessPlan,
         timer: 120, // 30 minutes in seconds
         isLoading: false,
-      });
+      }));
     },
     [state]
   );
@@ -158,35 +158,32 @@ export const useAppState = () => {
         createdAt: new Date(),
       };
 
-      setState({
-        ...state,
+      setState((prevState) => ({
+        ...prevState,
         logs: [...state.logs, newDocument],
-      });
+      }));
     },
     [state]
   );
 
   const updateDocument = useCallback(
     (id: string, updates: Partial<LogData>) => {
-      setState({
-        ...state,
+      setState((prevState) => ({
+        ...prevState,
         logs: state.logs.map((doc) =>
           doc.id === id ? { ...doc, ...updates } : doc
         ),
-      });
+      }));
     },
     [state]
   );
 
-  const updateTimer = useCallback(
-    (newTime: number) => {
-      setState({
-        ...state,
-        timer: newTime,
-      });
-    },
-    [state]
-  );
+  const updateTimer = useCallback((newTime: number) => {
+    setState((prevState) => ({
+      ...prevState,
+      timer: newTime,
+    }));
+  }, []);
 
   return {
     state,

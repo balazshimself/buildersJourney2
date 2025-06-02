@@ -8,6 +8,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { EvaluationPhase } from "@/components/evaluationPhase/evaluationPhase";
 import { useState } from "react";
 import Script from "next/script";
+import posthog from "posthog-js";
 
 // Add type definitions for the Frappe Gantt library
 declare global {
@@ -29,7 +30,16 @@ export default function Home() {
     updateCompanyValue,
   } = useAppState();
 
+  posthog.capture("my event", { property: "value" });
+
   const [userSolution, setUserSolution] = useState<string>("");
+
+  const setLimitedUserSolution = (solution: string) => {
+    if (solution.length > 1500) {
+      solution = solution.slice(0, 1500);
+    }
+    setUserSolution(solution);
+  };
 
   // Render appropriate phase based on current app state
   const renderPhase = () => {
@@ -43,7 +53,7 @@ export default function Home() {
             problem={state.currentProblem!}
             userSolution={userSolution}
             timer={state.timer}
-            onSolutionChange={setUserSolution}
+            onSolutionChange={setLimitedUserSolution}
             onEvaluate={evaluateSolution}
             testEvaluate={testEvaluate}
             onTimerChange={updateTimer}
