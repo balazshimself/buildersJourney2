@@ -21,7 +21,7 @@ Consider:
 
 For each task, provide:
 - A clear, specific name
-- Realistic start and end dates (spread over 3-6 months from 2025-10-08)
+- Realistic start and end dates (spread over 3-6 months from {today})
 - Progress percentage (0-100, with earlier tasks having higher progress)
 - Dependencies between tasks where logical
 
@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     const chain = prompt.pipe(functionCallingModel);
 
     const result = await chain.invoke({
+      today: new Date().toISOString().split("T")[0],
       businessPlan:
         typeof businessPlan === "string"
           ? businessPlan

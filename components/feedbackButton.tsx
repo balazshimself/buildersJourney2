@@ -11,6 +11,7 @@ export function FeedbackButton() {
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [hoveredRating, setHoveredRating] = useState(0);
 
   const handleSubmit = () => {
     if (rating === 0 && feedback.trim() === "") return;
@@ -22,18 +23,6 @@ export function FeedbackButton() {
       page: window.location.pathname,
       timestamp: new Date().toISOString(),
     });
-
-    // // Also send to a simple webhook or email service (optional)
-    // fetch("/api/feedback", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({
-    //     rating,
-    //     feedback: feedback.trim(),
-    //     url: window.location.href,
-    //     userAgent: navigator.userAgent,
-    //   }),
-    // }).catch(console.error); // Fail silently
 
     setIsSubmitted(true);
     setTimeout(() => {
@@ -91,9 +80,13 @@ export function FeedbackButton() {
                   <button
                     key={star}
                     onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoveredRating(star)}
+                    onMouseLeave={() => setHoveredRating(0)}
                     className={`p-1 ${
-                      star <= rating ? "text-yellow-500" : "text-gray-300"
-                    } hover:text-yellow-400 transition-colors`}
+                      star <= (hoveredRating || rating)
+                        ? "text-yellow-500"
+                        : "text-gray-300"
+                    } transition-colors duration-200`}
                   >
                     <Star className="w-6 h-6 fill-current" />
                   </button>
@@ -146,38 +139,3 @@ export function FeedbackButton() {
     </>
   );
 }
-
-// // Optional: Simple feedback API endpoint
-// // app/api/feedback/route.ts
-// import { NextRequest, NextResponse } from "next/server";
-
-// export async function POST(req: NextRequest) {
-//   try {
-//     const body = await req.json();
-
-//     // Log to console in development
-//     console.log("Feedback received:", body);
-
-//     // In production, you could send to:
-//     // - Discord webhook
-//     // - Slack webhook
-//     // - Simple email service
-//     // - Notion database
-
-//     // Example Discord webhook:
-//     if (process.env.DISCORD_WEBHOOK_URL) {
-//       await fetch(process.env.DISCORD_WEBHOOK_URL, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({
-//           content: `**New Feedback** ⭐${body.rating}/5\n\`\`\`${body.feedback}\`\`\`\nURL: ${body.url}`,
-//         }),
-//       });
-//     }
-
-//     return NextResponse.json({ success: true });
-//   } catch (error) {
-//     console.error("Feedback error:", error);
-//     return NextResponse.json({ success: false }, { status: 500 });
-//   }
-// }

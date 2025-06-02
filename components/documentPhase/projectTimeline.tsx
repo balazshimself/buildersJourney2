@@ -68,6 +68,7 @@ export function GanttChart({
           on_click: onTaskClick,
           on_date_change: onDateChange,
           on_progress_change: onProgressChange,
+          viewMode: "Week",
           custom_popup_html: (task: GanttTask) => {
             return `
               <div class="p-2 bg-white shadow rounded border border-gray-200 text-sm">

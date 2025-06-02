@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
-import { LogData as DocumentType } from "@/types";
 import {
   CardChoiceTemplate,
   ProgressBarTemplate,
@@ -109,48 +108,6 @@ export function useSpecializedDocuments() {
     []
   );
 
-  // Count entries by type for badges/summaries
-  const productStats = useMemo(
-    () => ({
-      progress: productEntries.filter(
-        (e) => e.data.type === ProgressBarTemplate
-      ).length,
-      choice: productEntries.filter((e) => e.data.type === CardChoiceTemplate)
-        .length,
-      update: productEntries.filter((e) => e.data.type === StaticTextTemplate)
-        .length,
-    }),
-    [productEntries]
-  );
-
-  const marketingStats = useMemo(
-    () => ({
-      progress: marketingEntries.filter(
-        (e) => e.data.type === ProgressBarTemplate
-      ).length,
-      choice: marketingEntries.filter((e) => e.data.type === CardChoiceTemplate)
-        .length,
-      update: marketingEntries.filter((e) => e.data.type === StaticTextTemplate)
-        .length,
-    }),
-    [marketingEntries]
-  );
-
-  const managementStats = useMemo(
-    () => ({
-      progress: managementEntries.filter(
-        (e) => e.data.type === ProgressBarTemplate
-      ).length,
-      choice: managementEntries.filter(
-        (e) => e.data.type === CardChoiceTemplate
-      ).length,
-      update: managementEntries.filter(
-        (e) => e.data.type === StaticTextTemplate
-      ).length,
-    }),
-    [managementEntries]
-  );
-
   // Get tag color for UI display
   const getTagColor = useCallback((tag: string) => {
     switch (tag) {
@@ -166,70 +123,74 @@ export function useSpecializedDocuments() {
   }, []);
 
   function ManagementStatsBadges({
-    progress,
-    choice,
-    update,
+    entities,
   }: {
-    progress: number;
-    choice: number;
-    update: number;
+    entities: {
+      data: JSX.Element;
+      timestamp: Date;
+    }[];
   }) {
+    const stats = {
+      progress: entities.filter((e) => e.data.type === ProgressBarTemplate)
+        .length,
+      choice: entities.filter((e) => e.data.type === CardChoiceTemplate).length,
+      update: entities.filter((e) => e.data.type === StaticTextTemplate).length,
+    };
     return (
       <div className="flex gap-2">
         <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
-          {progress + choice + update} Total
+          {stats.progress + stats.choice + stats.update} Total
         </span>
-        {progress > 0 && (
+        {stats.progress > 0 && (
           <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-            {progress} Progress
+            {stats.progress} Progress
           </span>
         )}
-        {choice > 0 && (
+        {stats.choice > 0 && (
           <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">
-            {choice} Choice
+            {stats.choice} Choice
           </span>
         )}
-        {update > 0 && (
+        {stats.update > 0 && (
           <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-blue-800">
-            {update} Updates
+            {stats.update} Updates
           </span>
         )}
       </div>
     );
   }
 
-  // Functions to create each specialized document
-  const showProductDocument = useCallback((): DocumentType => {
+  function showSpecializedDocument(
+    entities: {
+      data: JSX.Element;
+      timestamp: Date;
+    }[],
+    docTitle: string,
+    pageTitle: string,
+    id?: string
+  ) {
     return {
-      id: "product-document",
-      title: "Product Design & Development",
+      id: id || crypto.randomUUID(),
+      title: docTitle,
       content: (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-blue-900">
-              Product Development Tracker
-            </h3>
+            <h3 className="text-lg font-medium text-blue-900">{pageTitle}</h3>
             <div className="flex gap-2">
-              <ManagementStatsBadges
-                progress={productStats.progress}
-                choice={productStats.choice}
-                update={productStats.update}
-              />
+              <ManagementStatsBadges entities={entities} />
             </div>
           </div>
 
           <div className="space-y-3">
-            {productEntries.length === 0 ? (
+            {entities.length === 0 ? (
               <div className="p-6 border border-dashed border-gray-300 rounded-md text-gray-500 text-center bg-gray-50">
-                <p className="font-medium mb-1">
-                  No product development activities yet
-                </p>
+                <p className="font-medium mb-1">No activity yet!</p>
                 <p className="text-sm">
                   Use the "Build Something" button to start development.
                 </p>
               </div>
             ) : (
-              productEntries.map((entry, index) => (
+              entities.map((entry, index) => (
                 <div
                   key={`product-entry-${index}-${entry.timestamp.getTime()}`}
                   className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
@@ -271,160 +232,36 @@ export function useSpecializedDocuments() {
       ),
       createdAt: new Date(),
     };
-  }, [productEntries, productStats, getTagColor]);
+  }
 
-  const showMarketingDocument = useCallback((): DocumentType => {
-    return {
-      id: "marketing-document",
-      title: "Marketing & Customer Acquisition",
-      content: (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-emerald-900">
-              Marketing Strategy
-            </h3>
-            <div className="flex gap-2">
-              <ManagementStatsBadges
-                progress={marketingStats.progress}
-                choice={marketingStats.choice}
-                update={marketingStats.update}
-              />
-            </div>
-          </div>
+  const showProductDocument = useCallback(() => {
+    return showSpecializedDocument(
+      productEntries,
+      "Product Design & Development",
+      "Product Development Tracker"
+    );
+  }, [productEntries, getTagColor]);
 
-          <div className="space-y-3">
-            {marketingEntries.length === 0 ? (
-              <div className="p-6 border border-dashed border-gray-300 rounded-md text-gray-500 text-center bg-gray-50">
-                <p className="font-medium mb-1">No marketing activities yet</p>
-                <p className="text-sm">
-                  Use the "Build Something" button to start marketing
-                  initiatives.
-                </p>
-              </div>
-            ) : (
-              marketingEntries.map((entry, index) => (
-                <div
-                  key={`product-entry-${index}-${entry.timestamp.getTime()}`}
-                  className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
-                        entry.data.type === ProgressBarTemplate
-                          ? "progress"
-                          : entry.data.type === CardChoiceTemplate
-                          ? "choice"
-                          : entry.data.type === StaticTextTemplate
-                          ? "update"
-                          : "unknown"
-                      )}`}
-                    >
-                      {entry.data.type === ProgressBarTemplate
-                        ? "progress"
-                        : entry.data.type === CardChoiceTemplate
-                        ? "choice"
-                        : entry.data.type === StaticTextTemplate
-                        ? "update"
-                        : "unknown"}
-                    </span>
-                  </div>
-                  {entry.data}
-                  <p className="text-xs text-gray-500">
-                    {entry.timestamp.toLocaleDateString()} at{" "}
-                    {entry.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      ),
-      createdAt: new Date(),
-    };
-  }, [marketingEntries, marketingStats, getTagColor]);
+  const showMarketingDocument = useCallback(() => {
+    return showSpecializedDocument(
+      marketingEntries,
+      "Marketing",
+      "Marketing & Customer Acquisition"
+    );
+  }, [marketingEntries, getTagColor]);
 
-  const showManagementDocument = useCallback((): DocumentType => {
-    return {
-      id: "management-document",
-      title: "Team & Operations",
-      content: (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-purple-900">
-              Management Dashboard
-            </h3>
-            <div className="flex gap-2">
-              <ManagementStatsBadges
-                progress={managementStats.progress}
-                choice={managementStats.choice}
-                update={managementStats.update}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {managementEntries.length === 0 ? (
-              <div className="p-6 border border-dashed border-gray-300 rounded-md text-gray-500 text-center bg-gray-50">
-                <p className="font-medium mb-1">No management activities yet</p>
-                <p className="text-sm">
-                  Use the "Build Something" button to start team building.
-                </p>
-              </div>
-            ) : (
-              managementEntries.map((entry, index) => (
-                <div
-                  key={`product-entry-${index}-${entry.timestamp.getTime()}`}
-                  className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
-                        entry.data.type === ProgressBarTemplate
-                          ? "milestone"
-                          : entry.data.type === CardChoiceTemplate
-                          ? "update"
-                          : entry.data.type === StaticTextTemplate
-                          ? "risk"
-                          : "other"
-                      )}`}
-                    >
-                      {entry.data.type === ProgressBarTemplate
-                        ? "milestone"
-                        : entry.data.type === CardChoiceTemplate
-                        ? "update"
-                        : entry.data.type === StaticTextTemplate
-                        ? "risk"
-                        : "other"}
-                    </span>
-                  </div>
-                  {entry.data}
-                  <p className="text-xs text-gray-500">
-                    {entry.timestamp.toLocaleDateString()} at{" "}
-                    {entry.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      ),
-      createdAt: new Date(),
-    };
-  }, [managementEntries, managementStats, getTagColor]);
+  const showManagementDocument = useCallback(() => {
+    return showSpecializedDocument(
+      managementEntries,
+      "Management",
+      "Team & Operations"
+    );
+  }, [managementEntries, getTagColor]);
 
   return {
     productEntries,
     marketingEntries,
     managementEntries,
-    productStats,
-    marketingStats,
-    managementStats,
     addProductEntry,
     addMarketingEntry,
     addManagementEntry,

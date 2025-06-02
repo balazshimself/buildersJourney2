@@ -76,7 +76,7 @@ export function EvaluationPhase({
         )
         .join("\n\n");
 
-      const response = await fetch("/api/evaluate", {
+      const response = await fetch("/api/evaluatePerformance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

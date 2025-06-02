@@ -64,7 +64,7 @@ export const useAppState = () => {
         currentPhase: "document",
         logs: [],
         businessPlan: businessPlan,
-        timer: 120, // 30 minutes in seconds
+        timer: 120,
         isLoading: false,
       }));
     },
