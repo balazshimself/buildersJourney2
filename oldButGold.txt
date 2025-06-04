@@ -1,0 +1,219 @@
+  // Functions to create each specialized document
+  // const showProductDocument = useCallback((): DocumentType => {
+  //   return {
+  //     id: "product-document",
+  //     title: "Product Design & Development",
+  //     content: (
+  //       <div className="space-y-6">
+  //         <div className="flex items-center justify-between">
+  //           <h3 className="text-lg font-medium text-blue-900">
+  //             Product Development Tracker
+  //           </h3>
+  //           <div className="flex gap-2">
+  //             <ManagementStatsBadges
+  //               progress={productStats.progress}
+  //               choice={productStats.choice}
+  //               update={productStats.update}
+  //             />
+  //           </div>
+  //         </div>
+
+  //         <div className="space-y-3">
+  //           {productEntries.length === 0 ? (
+  //             <div className="p-6 border border-dashed border-gray-300 rounded-md text-gray-500 text-center bg-gray-50">
+  //               <p className="font-medium mb-1">
+  //                 No product development activities yet
+  //               </p>
+  //               <p className="text-sm">
+  //                 Use the "Build Something" button to start development.
+  //               </p>
+  //             </div>
+  //           ) : (
+  //             productEntries.map((entry, index) => (
+  //               <div
+  //                 key={`product-entry-${index}-${entry.timestamp.getTime()}`}
+  //                 className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+  //               >
+  //                 <div className="flex justify-between items-start mb-2">
+  //                   <span
+  //                     className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
+  //                       entry.data.type === ProgressBarTemplate
+  //                         ? "milestone"
+  //                         : entry.data.type === CardChoiceTemplate
+  //                         ? "update"
+  //                         : entry.data.type === StaticTextTemplate
+  //                         ? "risk"
+  //                         : "other"
+  //                     )}`}
+  //                   >
+  //                     {entry.data.type === ProgressBarTemplate
+  //                       ? "milestone"
+  //                       : entry.data.type === CardChoiceTemplate
+  //                       ? "update"
+  //                       : entry.data.type === StaticTextTemplate
+  //                       ? "risk"
+  //                       : "other"}
+  //                   </span>
+  //                 </div>
+  //                 {entry.data}
+  //                 <p className="text-xs text-gray-500">
+  //                   {entry.timestamp.toLocaleDateString()} at{" "}
+  //                   {entry.timestamp.toLocaleTimeString([], {
+  //                     hour: "2-digit",
+  //                     minute: "2-digit",
+  //                   })}
+  //                 </p>
+  //               </div>
+  //             ))
+  //           )}
+  //         </div>
+  //       </div>
+  //     ),
+  //     createdAt: new Date(),
+  //   };
+  // }, [productEntries, productStats, getTagColor]);
+
+  // const showMarketingDocument = useCallback((): DocumentType => {
+  //   return {
+  //     id: "marketing-document",
+  //     title: "Marketing & Customer Acquisition",
+  //     content: (
+  //       <div className="space-y-6">
+  //         <div className="flex items-center justify-between">
+  //           <h3 className="text-lg font-medium text-emerald-900">
+  //             Marketing Strategy
+  //           </h3>
+  //           <div className="flex gap-2">
+  //             <ManagementStatsBadges
+  //               progress={marketingStats.progress}
+  //               choice={marketingStats.choice}
+  //               update={marketingStats.update}
+  //             />
+  //           </div>
+  //         </div>
+
+  //         <div className="space-y-3">
+  //           {marketingEntries.length === 0 ? (
+  //             <div className="p-6 border border-dashed border-gray-300 rounded-md text-gray-500 text-center bg-gray-50">
+  //               <p className="font-medium mb-1">No marketing activities yet</p>
+  //               <p className="text-sm">
+  //                 Use the "Build Something" button to start marketing
+  //                 initiatives.
+  //               </p>
+  //             </div>
+  //           ) : (
+  //             marketingEntries.map((entry, index) => (
+  //               <div
+  //                 key={`product-entry-${index}-${entry.timestamp.getTime()}`}
+  //                 className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+  //               >
+  //                 <div className="flex justify-between items-start mb-2">
+  //                   <span
+  //                     className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
+  //                       entry.data.type === ProgressBarTemplate
+  //                         ? "progress"
+  //                         : entry.data.type === CardChoiceTemplate
+  //                         ? "choice"
+  //                         : entry.data.type === StaticTextTemplate
+  //                         ? "update"
+  //                         : "unknown"
+  //                     )}`}
+  //                   >
+  //                     {entry.data.type === ProgressBarTemplate
+  //                       ? "progress"
+  //                       : entry.data.type === CardChoiceTemplate
+  //                       ? "choice"
+  //                       : entry.data.type === StaticTextTemplate
+  //                       ? "update"
+  //                       : "unknown"}
+  //                   </span>
+  //                 </div>
+  //                 {entry.data}
+  //                 <p className="text-xs text-gray-500">
+  //                   {entry.timestamp.toLocaleDateString()} at{" "}
+  //                   {entry.timestamp.toLocaleTimeString([], {
+  //                     hour: "2-digit",
+  //                     minute: "2-digit",
+  //                   })}
+  //                 </p>
+  //               </div>
+  //             ))
+  //           )}
+  //         </div>
+  //       </div>
+  //     ),
+  //     createdAt: new Date(),
+  //   };
+  // }, [marketingEntries, marketingStats, getTagColor]);
+
+   const showManagementDocument = useCallback((): DocumentType => {
+    return {
+      id: "management-document",
+      title: "Team & Operations",
+      content: (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-purple-900">
+              Management Dashboard
+            </h3>
+            <div className="flex gap-2">
+              <ManagementStatsBadges
+                progress={managementStats.progress}
+                choice={managementStats.choice}
+                update={managementStats.update}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {managementEntries.length === 0 ? (
+              <div className="p-6 border border-dashed border-gray-300 rounded-md text-gray-500 text-center bg-gray-50">
+                <p className="font-medium mb-1">No management activities yet</p>
+                <p className="text-sm">
+                  Use the "Build Something" button to start team building.
+                </p>
+              </div>
+            ) : (
+              managementEntries.map((entry, index) => (
+                <div
+                  key={`product-entry-${index}-${entry.timestamp.getTime()}`}
+                  className="p-4 bg-white rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
+                        entry.data.type === ProgressBarTemplate
+                          ? "milestone"
+                          : entry.data.type === CardChoiceTemplate
+                          ? "update"
+                          : entry.data.type === StaticTextTemplate
+                          ? "risk"
+                          : "other"
+                      )}`}
+                    >
+                      {entry.data.type === ProgressBarTemplate
+                        ? "milestone"
+                        : entry.data.type === CardChoiceTemplate
+                        ? "update"
+                        : entry.data.type === StaticTextTemplate
+                        ? "risk"
+                        : "other"}
+                    </span>
+                  </div>
+                  {entry.data}
+                  <p className="text-xs text-gray-500">
+                    {entry.timestamp.toLocaleDateString()} at{" "}
+                    {entry.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ),
+      createdAt: new Date(),
+    };
+  }, [managementEntries, managementStats, getTagColor]);
