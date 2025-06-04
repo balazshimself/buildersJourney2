@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import {
   CardChoiceTemplate,
   ProgressBarTemplate,
@@ -108,20 +108,6 @@ export function useSpecializedDocuments() {
     []
   );
 
-  // Get tag color for UI display
-  const getTagColor = useCallback((tag: string) => {
-    switch (tag) {
-      case "milestone":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "update":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "risk":
-        return "bg-amber-100 text-amber-800 border-amber-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  }, []);
-
   function ManagementStatsBadges({
     entities,
   }: {
@@ -153,7 +139,7 @@ export function useSpecializedDocuments() {
         )}
         {stats.update > 0 && (
           <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-blue-800">
-            {stats.update} Updates
+            {stats.update} Update
           </span>
         )}
       </div>
@@ -181,7 +167,7 @@ export function useSpecializedDocuments() {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {entities.length === 0 ? (
               <div className="p-6 border border-dashed border-gray-300 rounded-md text-gray-500 text-center bg-gray-50">
                 <p className="font-medium mb-1">No activity yet!</p>
@@ -197,27 +183,33 @@ export function useSpecializedDocuments() {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded border ${getTagColor(
+                      className={`text-xs px-2 py-0.5 rounded border ${
                         entry.data.type === ProgressBarTemplate
-                          ? "milestone"
+                          ? "bg-green-100 text-green-800 border-green-200"
                           : entry.data.type === CardChoiceTemplate
-                          ? "update"
+                          ? "bg-blue-100 text-blue-800 border-blue-200"
                           : entry.data.type === StaticTextTemplate
-                          ? "risk"
-                          : "other"
-                      )}`}
+                          ? "bg-amber-100 text-amber-800 border-amber-200"
+                          : "bg-gray-100 text-gray-800 border-gray-200"
+                      }`}
                     >
                       {entry.data.type === ProgressBarTemplate
-                        ? "milestone"
+                        ? "Progress"
                         : entry.data.type === CardChoiceTemplate
-                        ? "update"
+                        ? "Choice"
                         : entry.data.type === StaticTextTemplate
-                        ? "risk"
-                        : "other"}
+                        ? "Update"
+                        : "Unknown Type"}
                     </span>
                   </div>
-                  {entry.data}
-                  <p className="text-xs text-gray-500">
+                  <div className="p-4 my-3 bg-gray-50 rounded">
+                    <div className="[&>*]:w-full">
+                      {React.cloneElement(entry.data, {
+                        className: "w-full", // Ensure the component takes full width
+                      })}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
                     {entry.timestamp.toLocaleDateString()} at{" "}
                     {entry.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
@@ -240,7 +232,7 @@ export function useSpecializedDocuments() {
       "Product Design & Development",
       "Product Development Tracker"
     );
-  }, [productEntries, getTagColor]);
+  }, [productEntries]);
 
   const showMarketingDocument = useCallback(() => {
     return showSpecializedDocument(
@@ -248,7 +240,7 @@ export function useSpecializedDocuments() {
       "Marketing",
       "Marketing & Customer Acquisition"
     );
-  }, [marketingEntries, getTagColor]);
+  }, [marketingEntries]);
 
   const showManagementDocument = useCallback(() => {
     return showSpecializedDocument(
@@ -256,7 +248,7 @@ export function useSpecializedDocuments() {
       "Management",
       "Team & Operations"
     );
-  }, [managementEntries, getTagColor]);
+  }, [managementEntries]);
 
   return {
     productEntries,
@@ -268,6 +260,5 @@ export function useSpecializedDocuments() {
     showProductDocument,
     showMarketingDocument,
     showManagementDocument,
-    getTagColor,
   };
 }

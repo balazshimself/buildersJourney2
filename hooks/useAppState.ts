@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { AppState, LogData } from "@/types";
+import { useCallback, useState } from "react";
+import { AppState, BusinessPlanSection, LogData, Problem } from "@/types";
 import problemsData from "@/data/problems.json";
-import { ValidationResponse } from "@/app/api/validateBusinessPlan/route";
 
 const INITIAL_STATE: AppState = {
   currentPhase: "rules",
@@ -12,7 +11,7 @@ const INITIAL_STATE: AppState = {
   businessPlan: null,
   logs: [],
   timer: 0,
-  rejectionReason: undefined,
+  sectionFeedback: [],
   isLoading: false,
   companyValue: 5000,
 };
@@ -24,12 +23,13 @@ export const useAppState = () => {
     const randomIndex = Math.floor(
       Math.random() * problemsData.problems.length
     );
-    const selectedProblem = problemsData.problems[randomIndex];
+    const selectedProblem: Problem = problemsData.problems[randomIndex];
 
     setState((prevState) => ({
       ...prevState,
       currentPhase: "problem",
       currentProblem: selectedProblem,
+      sectionFeedback: [],
       timer: 300,
       isLoading: false,
     }));
@@ -65,6 +65,7 @@ export const useAppState = () => {
         logs: [],
         businessPlan: businessPlan,
         timer: 120,
+        sectionFeedback: [],
         isLoading: false,
       }));
     },
@@ -98,24 +99,22 @@ export const useAppState = () => {
   }, [state, startDocumentPhase]);
 
   const evaluateSolution = useCallback(
-    async (userInput: string, previousPrompts?: string[]) => {
-      // Set validating state
-      setState((prevState) => ({
-        ...prevState,
-        isLoading: true,
-      }));
+    async (
+      sections: BusinessPlanSection[],
+      previousAttempts?: BusinessPlanSection[][]
+    ) => {
+      setState((prevState) => ({ ...prevState, isLoading: true }));
 
       try {
-        // Call API to validate business plan
+        console.log("Evaluating business plan sections:", sections);
         const response = await fetch("/api/validateBusinessPlan", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            problemStatement: state.currentProblem?.marketAnalysis || "",
-            businessPlan: userInput,
-            previousPrompts: previousPrompts || [],
+            problemStatement:
+              state.currentProblem?.sections.problemOverview.desc || "",
+            businessPlanSections: sections,
+            previousAttempts: previousAttempts || [],
           }),
         });
 
@@ -123,18 +122,23 @@ export const useAppState = () => {
           throw new Error("Failed to validate business plan");
         }
 
-        const result: ValidationResponse = await response.json();
+        const result = await response.json();
 
-        // Check if the plan was rejected
+        console.log("Validation result:", result);
+
         if (result.type === "accepted") {
-          startDocumentPhase(result);
+          // Access formalizedPlan from result.response
+          startDocumentPhase({
+            type: "accepted",
+            formalizedPlan: result.response.formalizedPlan,
+          });
         } else {
-          // if not accepted
+          // Access sectionFeedback from result.response
           setState((prevState) => ({
             ...prevState,
             isLoading: false,
-            rejectionReason: result.reason,
-            timer: prevState.timer + 60,
+            sectionFeedback: result.response.sectionFeedback || [],
+            timer: prevState.timer + 60, // Add extra time for revisions
           }));
         }
       } catch (error) {
@@ -142,8 +146,14 @@ export const useAppState = () => {
         setState((prevState) => ({
           ...prevState,
           isLoading: false,
-          rejectionReason: "Failed to fetch AI response! Please try again.",
-          timer: prevState.timer,
+          sectionFeedback: [
+            {
+              sectionId: "general",
+              isValid: false,
+              feedback:
+                "Failed to connect to validation service. Please try again.",
+            },
+          ],
         }));
       }
     },

@@ -1,10 +1,48 @@
 {
   "problems": [
     {
-      "id": "prob-001",
-      "title": "Local Event Discovery Gap",
-      "description": "People in mid-sized cities struggle to discover local events, workshops, and activities happening in their area. Event organizers, especially for niche interests (pottery classes, book clubs, hiking groups), have difficulty reaching their target audience beyond social media posts that get lost in feeds.",
-      "marketAnalysis": "Event discovery is solved well in major cities through platforms like Eventbrite and Meetup, but mid-sized cities (50K-500K population) are underserved. Local newspapers are declining, Facebook event discovery is poor for organic reach, and Instagram posts are easily missed. Our research in 10 mid-sized cities found that 67% of residents say they 'miss out on local events they would have attended if they knew about them.' Event organizers report that 80% of their marketing effort goes to social media with low engagement rates. The market includes 300+ mid-sized cities in the US, with local event organizers (gyms, community centers, small businesses, hobby groups) willing to pay $15-30/month for better reach. Current solutions are either too broad (Eventbrite) or require high user adoption (Meetup). There's an opportunity for a locally-focused, easy-to-use platform that helps both discovery and simple event management for small organizers."
+      "id": "local-restaurant-ordering",
+      "sections": {
+        "problemOverview": {
+          "title": "Local Restaurant Online Ordering Gap",
+          "desc": "Local restaurants face a dilemma: customers increasingly expect online ordering and delivery options, but platforms like DoorDash and UberEats charge 15-30% commission fees that devastate already thin profit margins. Many family-owned restaurants can't afford professional website development, leaving them stuck between losing customers to competitors or losing profits to platform fees. Meanwhile, customers often prefer supporting local businesses directly but lack an easy way to discover and order from neighborhood restaurants that aren't on major platforms. This creates a gap where both restaurants and customers want a solution, but the current market primarily serves large chains and platform companies rather than local communities."
+        },
+        "keyPainPoints": [
+          {
+            "title": "High Platform Fees",
+            "desc": "Third-party platforms charge 15-30% commission, eating into already slim restaurant margins"
+          },
+          {
+            "title": "Limited Tech Resources",
+            "desc": "Small restaurants can't afford $5K+ for custom website development and maintenance"
+          },
+          {
+            "title": "Customer Discovery",
+            "desc": "Local restaurants struggle to reach customers who prefer ordering online vs. calling"
+          },
+          {
+            "title": "Order Management",
+            "desc": "Many restaurants still use pen and paper, leading to errors and inefficient workflows"
+          }
+        ],
+        "targetSegment": {
+          "title": "Who's Affected Most",
+          "segments": [
+            {
+              "title": "Independent restaurants",
+              "desc": "Family-owned establishments with 2-15 employees, limited tech budgets"
+            },
+            {
+              "title": "Local food customers",
+              "desc": "Residents who want to support neighborhood businesses but need convenience"
+            },
+            {
+              "title": "Small restaurant chains",
+              "desc": "Regional chains with 3-10 locations looking for cost-effective ordering solutions"
+            }
+          ]
+        }
+      }
     }
   ]
 }

@@ -9,9 +9,37 @@ export enum ResponseTypes {
 
 export interface Problem {
   id: string;
+  sections: {
+    problemOverview: {
+      title: string;
+      desc: string;
+    };
+    keyPainPoints: {
+      title: string;
+      desc: string;
+    }[];
+    targetSegment: {
+      title: string;
+      segments: {
+        title: string;
+        desc: string;
+      }[];
+    };
+  };
+}
+
+export interface BusinessPlanSection {
+  id: string;
   title: string;
-  description: string;
-  marketAnalysis: string;
+  placeholder: string;
+  value: string;
+  maxLength: number;
+}
+
+export interface SectionFeedback {
+  sectionId: string;
+  isValid: boolean;
+  feedback?: string;
 }
 
 export interface LogData {
@@ -35,7 +63,7 @@ export interface AppState {
   productCards: CardComponent[];
   managementCards: CardComponent[];
   logs: LogData[];
-  rejectionReason?: string;
+  sectionFeedback: SectionFeedback[];
   timer: number;
   isLoading: boolean;
   businessPlan: LogData | null;

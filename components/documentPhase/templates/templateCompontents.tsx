@@ -35,7 +35,7 @@ export const ProgressBarTemplate: React.FC<{
 
   return (
     <div
-      className={`p-4 rounded-lg border bg-white shadow-sm ${className}`}
+      className={`${className}`}
       data-component-type="progress-bar" // NEW: For tracking
       data-progress={`${currentCheckpointIndex}/${totalCheckpoints}`}
     >

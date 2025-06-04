@@ -30,17 +30,6 @@ export default function Home() {
     updateCompanyValue,
   } = useAppState();
 
-  posthog.capture("my event", { property: "value" });
-
-  const [userSolution, setUserSolution] = useState<string>("");
-
-  const setLimitedUserSolution = (solution: string) => {
-    if (solution.length > 1500) {
-      solution = solution.slice(0, 1500);
-    }
-    setUserSolution(solution);
-  };
-
   // Render appropriate phase based on current app state
   const renderPhase = () => {
     switch (state.currentPhase) {
@@ -51,13 +40,13 @@ export default function Home() {
         return (
           <ProblemPhase
             problem={state.currentProblem!}
-            userSolution={userSolution}
+            // userSolution={userSolution}
             timer={state.timer}
-            onSolutionChange={setLimitedUserSolution}
+            // onSolutionChange={setLimitedUserSolution}
             onEvaluate={evaluateSolution}
             testEvaluate={testEvaluate}
             onTimerChange={updateTimer}
-            rejectionReason={state.rejectionReason}
+            sectionFeedback={state.sectionFeedback}
             isLoading={state.isLoading}
           />
         );
