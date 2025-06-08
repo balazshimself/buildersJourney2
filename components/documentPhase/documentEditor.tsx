@@ -6,7 +6,6 @@ import { LogData as DocumentType } from "@/types";
 interface DocumentEditorProps {
   activeDocument: DocumentType | null;
   timer: number;
-  onTimerChange: (time: number) => void;
 }
 
 export function DocumentEditor({ activeDocument }: DocumentEditorProps) {

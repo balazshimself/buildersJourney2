@@ -9,6 +9,9 @@ export const runtime = "edge";
 const TEMPLATE = `You are an expert business evaluator for a startup simulation game. 
 Evaluate the player's complete business journey including their initial plan and all decisions made.
 
+REJECTED BUSINESS PLANS:
+{businessPlan}
+
 ORIGINAL BUSINESS PLAN:
 {businessPlan}
 

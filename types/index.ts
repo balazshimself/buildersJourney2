@@ -65,7 +65,6 @@ export interface AppState {
   logs: LogData[];
   sectionFeedback: SectionFeedback[];
   timer: number;
-  isLoading: boolean;
   businessPlan: LogData | null;
   companyValue: number;
 }

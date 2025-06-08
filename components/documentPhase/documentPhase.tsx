@@ -18,7 +18,6 @@ interface DocumentPhaseProps {
   onAddDocument: (
     document: Omit<LogData, "id" | "position" | "visible" | "createdAt">
   ) => void;
-  onTimerChange: (time: number) => void;
   startEvaluationPhase: () => void;
   updateCompanyValue: (value: number) => void;
 }
@@ -30,7 +29,6 @@ export function DocumentPhase({
   companyValue,
   onUpdateDocument,
   onAddDocument,
-  onTimerChange,
   startEvaluationPhase,
   updateCompanyValue,
 }: DocumentPhaseProps) {
@@ -268,23 +266,14 @@ export function DocumentPhase({
                     Dev Skip
                   </Button>
                 )}
-                <OptimizedTimer
-                  initialTime={timer}
-                  autoStart={true}
-                  onTimeChange={onTimerChange}
-                  className="min-w-28"
-                />
+                <OptimizedTimer initialTime={timer} className="min-w-28" />
               </div>
             </div>
           </div>
         </div>
         {/* Editor below header */}
         <div className="flex-1 min-w-0">
-          <DocumentEditor
-            activeDocument={activeDocument}
-            timer={timer}
-            onTimerChange={onTimerChange}
-          />
+          <DocumentEditor activeDocument={activeDocument} timer={timer} />
         </div>
       </div>
     </div>

@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BusinessPlanSection, Problem, SectionFeedback } from "@/types";
-import { OptimizedTimer } from "@/components/ui/optimizedTimer";
+import {
+  OptimizedTimer,
+  OptimizedTimerRef,
+} from "@/components/ui/optimizedTimer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,19 +14,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AlertTriangle, Users, TrendingUp, Calendar } from "lucide-react";
+import { AlertTriangle, Users, TrendingUp, DollarSign } from "lucide-react";
 
 interface ProblemPhaseProps {
   problem: Problem;
-  timer: number;
-  onEvaluate: (
-    sections: BusinessPlanSection[],
-    previousAttempts?: BusinessPlanSection[][]
-  ) => void;
+  onEvaluate: (sections: BusinessPlanSection[], timer?: number) => void;
   testEvaluate?: () => void;
-  onTimerChange: (time: number) => void;
   sectionFeedback?: SectionFeedback[];
-  isLoading: boolean;
 }
 
 const BUSINESS_PLAN_SECTIONS: Omit<BusinessPlanSection, "value">[] = [
@@ -41,35 +38,46 @@ const BUSINESS_PLAN_SECTIONS: Omit<BusinessPlanSection, "value">[] = [
     maxLength: 250,
   },
   {
-    id: "implementation",
-    title: "Implementation",
+    id: "financials",
+    title: "Financials & Revenue Model",
     placeholder:
-      "How do you plan to implement this? What are the key steps and your goal?",
+      "What is your revenue model? How will you sustain this business?",
     maxLength: 250,
   },
 ];
 
 export function ProblemPhase({
   problem,
-  timer,
   onEvaluate,
   testEvaluate,
-  onTimerChange,
   sectionFeedback = [],
-  isLoading: isValidating,
 }: ProblemPhaseProps) {
   const [sections, setSections] = useState<BusinessPlanSection[]>(
     BUSINESS_PLAN_SECTIONS.map((section) => ({ ...section, value: "" }))
   );
-  const [previousAttempts, setPreviousAttempts] = useState<
-    BusinessPlanSection[][]
-  >([]);
+
+  const [openTooltip, setOpenTooltip] = useState<string | null>(null);
+  const [waiting, setWaiting] = useState(false);
+  const timerRef = useRef<OptimizedTimerRef>(null);
 
   useEffect(() => {
-    if (timer === 0 && !isValidating) {
-      handleSubmit();
+    setWaiting(false);
+    console.log("ASDASD", sectionFeedback);
+    if (sectionFeedback.length > 0) {
+      if (timerRef.current && getTime() < 20) {
+        console.log("Adjusting timer based on feedback");
+        adjustTimer(60);
+      }
     }
-  }, [timer, isValidating]);
+  }, [sectionFeedback]);
+
+  const adjustTimer = (seconds: number) => {
+    timerRef.current?.adjustTime(seconds);
+  };
+
+  const getTime = () => {
+    return timerRef.current?.getTime() || 0;
+  };
 
   const updateSection = (id: string, value: string) => {
     setSections((prev) =>
@@ -94,10 +102,9 @@ export function ProblemPhase({
   };
 
   const handleSubmit = () => {
-    if (!isFormValid()) return;
-
-    setPreviousAttempts((prev) => [...prev, sections]);
-    onEvaluate(sections, previousAttempts);
+    setWaiting(true);
+    onEvaluate(sections, timerRef.current?.getTime());
+    setOpenTooltip(null);
   };
 
   const getSectionIcon = (sectionId: string) => {
@@ -106,8 +113,8 @@ export function ProblemPhase({
         return <TrendingUp className="w-4 h-4" />;
       case "target-audience":
         return <Users className="w-4 h-4" />;
-      case "implementation":
-        return <Calendar className="w-4 h-4" />;
+      case "financials":
+        return <DollarSign className="w-4 h-4" />;
       default:
         return null;
     }
@@ -135,10 +142,9 @@ export function ProblemPhase({
               </Button>
             )}
             <OptimizedTimer
-              initialTime={timer}
-              autoStart={true}
+              ref={timerRef}
+              initialTime={6 * 60}
               onComplete={handleSubmit}
-              onTimeChange={onTimerChange}
               className="min-w-28"
             />
           </div>
@@ -187,31 +193,6 @@ export function ProblemPhase({
                 </div>
               </CardContent>
             </Card>
-
-            {/* Target Segments */}
-            {/* <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">
-                  {problem.sections.targetSegment.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {problem.sections.targetSegment.segments.map(
-                    (segment, index) => (
-                      <div key={index}>
-                        <p className="text-sm">
-                          <span className="font-medium text-gray-900">
-                            {segment.title}:
-                          </span>{" "}
-                          <span className="text-gray-700">{segment.desc}</span>
-                        </p>
-                      </div>
-                    )
-                  )}
-                </div>
-              </CardContent>
-            </Card> */}
           </div>
 
           {/* Business Plan Form - 2 columns */}
@@ -239,13 +220,31 @@ export function ProblemPhase({
                           </label>
 
                           {hasError && (
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <AlertTriangle className="w-4 h-4 text-red-500" />
+                            <Tooltip
+                              open={openTooltip === section.id}
+                              onOpenChange={(open) => {
+                                setOpenTooltip(open ? section.id : null);
+                              }}
+                            >
+                              <TooltipTrigger asChild>
+                                <button
+                                  className="flex items-center"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setOpenTooltip((prev) =>
+                                      prev === section.id ? null : section.id
+                                    );
+                                  }}
+                                >
+                                  <AlertTriangle className="w-4 h-4 text-red-500" />
+                                </button>
                               </TooltipTrigger>
                               <TooltipContent
                                 side="top"
                                 className="max-w-sm bg-red-50 border-red-200"
+                                onPointerDownOutside={() => {
+                                  setOpenTooltip(null);
+                                }}
                               >
                                 <p className="text-red-700 text-xs">
                                   {feedback.feedback}
@@ -265,7 +264,7 @@ export function ProblemPhase({
                         onChange={(e) =>
                           updateSection(section.id, e.target.value)
                         }
-                        disabled={isValidating}
+                        disabled={waiting}
                         placeholder={section.placeholder}
                         className={`w-full p-3 border rounded-md resize-none text-sm transition-colors ${
                           hasError
@@ -282,11 +281,11 @@ export function ProblemPhase({
                 <div className="mt-4 flex flex-col gap-3">
                   <Button
                     onClick={handleSubmit}
-                    disabled={!isFormValid() || isValidating}
+                    disabled={!isFormValid() || waiting}
                     className="w-full bg-blue-600 hover:bg-blue-700"
                     size="lg"
                   >
-                    {isValidating
+                    {waiting
                       ? "Evaluating Solution..."
                       : "Submit Technical Plan"}
                   </Button>

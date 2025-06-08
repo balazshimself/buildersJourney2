@@ -6,9 +6,7 @@ import { ProblemPhase } from "@/components/problemPhase/problemPhase";
 import { DocumentPhase } from "@/components/documentPhase/documentPhase";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { EvaluationPhase } from "@/components/evaluationPhase/evaluationPhase";
-import { useState } from "react";
 import Script from "next/script";
-import posthog from "posthog-js";
 
 // Add type definitions for the Frappe Gantt library
 declare global {
@@ -26,7 +24,6 @@ export default function Home() {
     startEvaluationPhase,
     addDocument,
     updateDocument,
-    updateTimer,
     updateCompanyValue,
   } = useAppState();
 
@@ -40,14 +37,9 @@ export default function Home() {
         return (
           <ProblemPhase
             problem={state.currentProblem!}
-            // userSolution={userSolution}
-            timer={state.timer}
-            // onSolutionChange={setLimitedUserSolution}
             onEvaluate={evaluateSolution}
             testEvaluate={testEvaluate}
-            onTimerChange={updateTimer}
             sectionFeedback={state.sectionFeedback}
-            isLoading={state.isLoading}
           />
         );
 
@@ -60,16 +52,11 @@ export default function Home() {
               businessPlan={state.businessPlan}
               companyValue={state.companyValue}
               onAddDocument={addDocument}
-              onTimerChange={updateTimer}
               onUpdateDocument={updateDocument}
               startEvaluationPhase={startEvaluationPhase}
               updateCompanyValue={updateCompanyValue}
             />
-            {/* Load Frappe Gantt script and styles */}
-            <Script
-              src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"
-              // onLoad={() => setIsLibraryLoaded(true)}
-            />
+            <Script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js" />
             <link
               rel="stylesheet"
               href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.css"

@@ -1,40 +1,64 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import { cn } from "@/lib/utils";
 
 interface OptimizedTimerProps {
   initialTime: number;
-  onComplete?: () => void;
-  autoStart?: boolean;
   className?: string;
-  onTimeChange?: (newTime: number) => void;
+  onComplete?: () => void;
 }
 
-export function OptimizedTimer({
-  initialTime,
-  onComplete,
-  autoStart = false,
-  className,
-  onTimeChange,
-}: OptimizedTimerProps) {
+export interface OptimizedTimerRef {
+  adjustTime: (timeToAdd: number) => void;
+  getTime: () => number;
+}
+
+export const OptimizedTimer = forwardRef<
+  OptimizedTimerRef,
+  OptimizedTimerProps
+>(({ initialTime, className, onComplete }, ref) => {
   const [time, setTime] = useState(initialTime);
-  const [isRunning, setIsRunning] = useState(autoStart);
   const [isComplete, setIsComplete] = useState(false);
 
-  // Use refs for values needed in the interval to avoid dependency issues
   const timeRef = useRef(initialTime);
-  const isRunningRef = useRef(autoStart);
   const onCompleteRef = useRef(onComplete);
-  const onTimeChangeRef = useRef(onTimeChange);
 
   // Update refs when props change
   useEffect(() => {
     timeRef.current = time;
-    isRunningRef.current = isRunning;
     onCompleteRef.current = onComplete;
-    onTimeChangeRef.current = onTimeChange;
-  }, [time, isRunning, onComplete, onTimeChange]);
+  }, [time, onComplete]);
+
+  // Expose the adjustTime method via ref
+  useImperativeHandle(
+    ref,
+    () => ({
+      adjustTime: (timeToAdd: number) => {
+        const newTime = Math.max(0, Math.max(0, timeRef.current) + timeToAdd);
+        console.log("Adjusting time by:", timeToAdd, "New time:", newTime);
+        setTime(newTime);
+
+        // If we were complete but now have time, reset completion state
+        if (newTime > 0) {
+          setIsComplete(false);
+        } else {
+          setIsComplete(true);
+          if (onCompleteRef.current) {
+            onCompleteRef.current();
+          }
+        }
+      },
+      getTime: () => timeRef.current,
+    }),
+    []
+  );
 
   // Format time as MM:SS
   const formatTime = (timeInSeconds: number) => {
@@ -45,26 +69,10 @@ export function OptimizedTimer({
       .padStart(2, "0")}`;
   };
 
-  // Timer controls
-  const start = () => {
-    setIsRunning(true);
-    setIsComplete(false);
-  };
-
-  const pause = () => {
-    setIsRunning(false);
-  };
-
-  const reset = () => {
-    setTime(initialTime);
-    setIsRunning(false);
-    setIsComplete(false);
-  };
-
   useEffect(() => {
     let lastUpdateTime = Date.now();
     let animationFrameId: number;
-    let isActive = true; // Add cleanup flag
+    let isActive = true;
 
     const updateTimer = () => {
       if (!isActive) return; // Check if component is still mounted
@@ -72,7 +80,7 @@ export function OptimizedTimer({
       const now = Date.now();
       const deltaTime = now - lastUpdateTime;
 
-      if (isRunningRef.current && deltaTime >= 1000) {
+      if (deltaTime >= 1000) {
         const secondsToSubtract = Math.floor(deltaTime / 1000);
         const newTime = Math.max(0, timeRef.current - secondsToSubtract);
 
@@ -80,13 +88,7 @@ export function OptimizedTimer({
           timeRef.current = newTime;
           setTime(newTime);
 
-          if (onTimeChangeRef.current) {
-            onTimeChangeRef.current(newTime);
-          }
-
-          if (newTime === 0 && isRunningRef.current) {
-            isRunningRef.current = false;
-            setIsRunning(false);
+          if (newTime === 0) {
             setIsComplete(true);
 
             if (onCompleteRef.current) {
@@ -110,7 +112,7 @@ export function OptimizedTimer({
       isActive = false; // Set cleanup flag
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [isComplete]);
 
   return (
     <div
@@ -119,17 +121,14 @@ export function OptimizedTimer({
     >
       <div className="text-2xl font-bold flex items-center gap-2">
         <span
-          className={cn(
-            "transition-colors",
-            isRunning && time < 60 ? "text-red-500" : ""
-          )}
+          className={cn("transition-colors", time < 60 ? "text-red-500" : "")}
         >
           {formatTime(time)}
         </span>
-        {isRunning && (
+        {!isComplete && (
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
         )}
       </div>
     </div>
   );
-}
+});

@@ -10,7 +10,7 @@ import { rateLimit } from "@/lib/rateLimit";
 export const runtime = "edge";
 
 const TEMPLATE = `You are an AI business plan evaluator for a startup simulation game. 
-The user has submitted a structured business plan with different sections addressing a specific market problem.
+The user has ~5 minutes to think of, and type out a business plan, so expect quick brainstorming-level ideas, not polished coherent plans. However, the core concept must be solid enough to build on top.
 
 PROBLEM STATEMENT:
 {problemStatement}
@@ -23,26 +23,90 @@ PREVIOUS SUBMISSION FEEDBACK (if any):
 
 Your task is to evaluate each section individually and provide specific feedback:
 
-EVALUATION CRITERIA:
-- problem-solution: Does it address the specific market gap? Is the solution feasible and realistic?
-- target-audience: Is it specific enough? Are demographics, needs, and pain points clearly defined? Are marketing channels appropriate?
+EVALUATION CRITERIA (for 5-minute brainstorming):
+- problem-solution: Does it address the specific market gap? Is the solution realistic and buildable?
+- target-audience: Is it specific enough to identify real customers? Are basic demographics and needs clear?
 - implementation: Are the first steps actionable with realistic resource requirements?
 
 RESPONSE GUIDELINES:
-- If ALL sections are satisfactory and work together cohesively, respond with type "ACCEPTED" and create a comprehensive formalized business plan
-- If ANY section needs improvement, respond with type "REJECTED" and provide section-specific feedback
-- **CRITICAL**: Use ONLY these exact section IDs in your sectionFeedback: "problem-solution", "target-audience", "implementation"
+- If ALL sections show a viable business concept (even if rough), respond with type "ACCEPTED" and create a comprehensive formalized business plan
+- If ANY section is too vague, unrealistic, or doesn't address the problem, respond with type "REJECTED" and provide section-specific feedback
+- **CRITICAL**: Use ONLY these exact section IDs in your sectionFeedback: {sectionIDS}
 
-Be specific and actionable in your feedback. Examples of good feedback:
-- "Your target audience is too broad. Instead of 'working professionals,' specify: 'Marketing managers aged 28-45 at mid-size companies (50-500 employees) struggling with campaign attribution'"
-- "Your solution lacks concrete features. Consider: 'A mobile app with push notifications, local business partnerships, and AI-powered event recommendations based on user preferences'"
-- "Your implementation plan needs specific steps. Try: 'Week 1-2: Build MVP landing page, Week 3-4: Partner with 5 local venues, Week 5-6: Launch beta with 50 users'"
+FEEDBACK STYLE - Be direct and concise:
+- BAD: "Your target audience could benefit from additional specificity and demographic details to better understand your customer base"
+- GOOD: "Too vague. Instead of 'small businesses,' specify: 'Local restaurants with X employees struggling with online presence'"
+
+- BAD: "Your solution presents an interesting approach but would benefit from more concrete implementation details"  
+- GOOD: "Missing key features. What does your app do? Add specifics like 'commission-free ordering platform'"
+
+- BAD: "Your implementation strategy shows promise but requires more detailed planning"
+- GOOD: "No clear first steps. Try: 'Week 1: Build landing page, Week 2: Contact 10 local restaurants, Week 3: Launch pilot'"
 
 For repeat submissions:
-- Acknowledge what has improved since the last attempt
-- Focus feedback only on sections that still need work
-- Be encouraging about progress while maintaining standards
-- If someone keeps submitting inadequate plans, be more direct about the specific improvements needed`;
+- Note improvements briefly
+- Focus only on remaining issues
+- After multiple rejections, be blunt: "This still doesn't work because..." and give specific fixes needed
+
+EXAMPLE EVALUATIONS:
+
+Example 1 - REJECTION (too vague):
+User input in the problem-solution input: "I will create an app for restaurants"
+Response: {{
+  "type": "REJECTED",
+  "response": {{
+    "sectionFeedback": [
+      {{
+        "sectionId": "problem-solution",
+        "isValid": false,
+        "feedback": "What does the app actually do? The problem is high delivery fees - how does your app solve this?"
+      }},
+      ...
+    ],
+    "overallMessage": "Too generic. Need specific features and clear target market."
+  }}
+}}
+
+Example 2 - ACCEPTANCE (good brainstorm):
+User input: "Commission-free ordering platform for small restaurants. Target family-owned places with less than 10 employees. Charge monthly instead of 15% per order. Use connections for pilot testing."
+Response: {{
+  "type": "ACCEPTED", 
+  "response": {{
+    "formalizedPlan": "Local Restaurant Direct Ordering Platform\n\nProblem: Independent restaurants lose 15-30% profit to delivery platforms...\n\nSolution: Commission-free ordering platform charging flat $49/month...\n\n[Full formatted business plan]"
+  }}
+}}
+
+Example 3 - BLUNT REJECTION (repeat offender):
+User input: "Make restaurants better with technology"
+Response: {{
+  "type": "REJECTED",
+  "response": {{
+    "sectionFeedback": [
+      {{
+        "sectionId": "problem-solution",
+        "isValid": false, 
+        "feedback": "This still doesn't work. 'Make better with technology' isn't a solution. The problem is delivery fees - propose something concrete like 'direct ordering system' or 'loyalty app.'"
+      }}
+    ],
+    "overallMessage": "Third attempt still too vague. You need actual features and implementation steps."
+  }}
+}}
+  
+Example 3 - BLUNT REJECTION (irrelevant input):
+User input: "ASDAGsdsasd I like pizza"
+Response: {{
+  "type": "REJECTED",
+  "response": {{
+    "sectionFeedback": [
+      {{
+        "sectionId": "problem-solution",
+        "isValid": false, 
+        "feedback": "Your input does not provide any relevant information."
+      }}
+    ],
+    "overallMessage": "Attempt way too vague. You need actual features and implementation steps."
+  }}
+}}`;
 
 const AcceptedResponseSchema = z.object({
   formalizedPlan: z
@@ -120,6 +184,8 @@ export async function POST(
     const body = await req.json();
     const { problemStatement, businessPlanSections, previousAttempts } = body;
 
+    const sectionIds = businessPlanSections.map((section: any) => section.id);
+
     if (!problemStatement || !businessPlanSections) {
       return NextResponse.json(
         {
@@ -196,6 +262,7 @@ export async function POST(
       problemStatement,
       businessPlanSections: sectionsText,
       previousFeedback: previousFeedbackText,
+      sectionIDS: sectionIds.join(", "),
     });
 
     // Convert markdown to HTML for accepted responses

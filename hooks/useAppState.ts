@@ -1,6 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { AppState, BusinessPlanSection, LogData, Problem } from "@/types";
 import problemsData from "@/data/problems.json";
+import { OptimizedTimerRef } from "@/components/ui/optimizedTimer";
 
 const INITIAL_STATE: AppState = {
   currentPhase: "rules",
@@ -12,17 +13,19 @@ const INITIAL_STATE: AppState = {
   logs: [],
   timer: 0,
   sectionFeedback: [],
-  isLoading: false,
   companyValue: 5000,
 };
 
 export const useAppState = () => {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
-
+  const [submittedBusinessPlans, setSubmittedBusinessPlans] = useState<
+    BusinessPlanSection[][]
+  >([]);
   const startProblemPhase = useCallback(() => {
     const randomIndex = Math.floor(
       Math.random() * problemsData.problems.length
     );
+
     const selectedProblem: Problem = problemsData.problems[randomIndex];
 
     setState((prevState) => ({
@@ -30,8 +33,7 @@ export const useAppState = () => {
       currentPhase: "problem",
       currentProblem: selectedProblem,
       sectionFeedback: [],
-      timer: 300,
-      isLoading: false,
+      timer: 10, // 300
     }));
   }, [state]);
 
@@ -76,7 +78,6 @@ export const useAppState = () => {
     setState({
       ...state,
       currentPhase: "evaluation",
-      isLoading: false,
     });
   }, [state]);
 
@@ -99,10 +100,7 @@ export const useAppState = () => {
   }, [state, startDocumentPhase]);
 
   const evaluateSolution = useCallback(
-    async (
-      sections: BusinessPlanSection[],
-      previousAttempts?: BusinessPlanSection[][]
-    ) => {
+    async (sections: BusinessPlanSection[], timer?: number) => {
       setState((prevState) => ({ ...prevState, isLoading: true }));
 
       try {
@@ -114,9 +112,11 @@ export const useAppState = () => {
             problemStatement:
               state.currentProblem?.sections.problemOverview.desc || "",
             businessPlanSections: sections,
-            previousAttempts: previousAttempts || [],
+            previousAttempts: submittedBusinessPlans || [],
           }),
         });
+
+        setSubmittedBusinessPlans((prev) => [...prev, sections]);
 
         if (!response.ok) {
           throw new Error("Failed to validate business plan");
@@ -133,19 +133,23 @@ export const useAppState = () => {
             formalizedPlan: result.response.formalizedPlan,
           });
         } else {
-          // Access sectionFeedback from result.response
-          setState((prevState) => ({
-            ...prevState,
-            isLoading: false,
-            sectionFeedback: result.response.sectionFeedback || [],
-            timer: prevState.timer + 60, // Add extra time for revisions
-          }));
+          if (submittedBusinessPlans.length >= 2 && timer! <= 20) {
+            console.log("Max attempts reached, showing final feedback.");
+            setState((prevState) => ({
+              ...prevState,
+              currentPhase: "evaluation",
+            }));
+          } else {
+            setState((prevState) => ({
+              ...prevState,
+              sectionFeedback: result.response.sectionFeedback || [],
+            }));
+          }
         }
       } catch (error) {
         console.error("Error validating solution:", error);
         setState((prevState) => ({
           ...prevState,
-          isLoading: false,
           sectionFeedback: [
             {
               sectionId: "general",
