@@ -35,14 +35,14 @@ const BUSINESS_PLAN_SECTIONS: Omit<BusinessPlanSection, "value">[] = [
     id: "target-audience",
     title: "Target Audience & Marketing",
     placeholder: "Who is your target audience? How will you market to them?",
-    maxLength: 250,
+    maxLength: 300,
   },
   {
     id: "financials",
     title: "Financials & Revenue Model",
     placeholder:
       "What is your revenue model? How will you sustain this business?",
-    maxLength: 250,
+    maxLength: 300,
   },
 ];
 

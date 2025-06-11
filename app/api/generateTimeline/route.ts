@@ -22,7 +22,7 @@ Consider:
 For each task, provide:
 - A clear, specific name
 - Realistic start and end dates (spread over 3-6 months from {today})
-- Progress percentage (0-100, with earlier tasks having higher progress)
+- Progress percentage (should be 0% for future tasks)
 - Dependencies between tasks where logical
 
 Make the timeline realistic for a startup with limited resources.`;
@@ -32,7 +32,7 @@ const TaskSchema = z.object({
   name: z.string(),
   start: z.string().describe("ISO date string"),
   end: z.string().describe("ISO date string"),
-  progress: z.number().min(0).max(100),
+  progress: z.number().default(0),
   dependencies: z.string().nullable(),
   customClass: z.string().nullable(),
 });

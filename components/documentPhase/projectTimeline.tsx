@@ -68,7 +68,9 @@ export function GanttChart({
           on_click: onTaskClick,
           on_date_change: onDateChange,
           on_progress_change: onProgressChange,
-          viewMode: "Week",
+          view_mode: "Week",
+          date_format: "YYYY-MM-DD", // Optional: specify date format
+          start: new Date().toISOString().split("T")[0],
           custom_popup_html: (task: GanttTask) => {
             return `
               <div class="p-2 bg-white shadow rounded border border-gray-200 text-sm">

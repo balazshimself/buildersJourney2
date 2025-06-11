@@ -48,9 +48,9 @@ export function DocumentPhase({
   );
   const [timelineTasks, setTimelineTasks] = useState<GanttTask[]>([]);
 
-  const timelineDoc = {
+  const [timelineDoc, setTimelineDoc] = useState<LogData>({
     id: `project-timeline-${Date.now()}`,
-    type: "timeline" as const,
+    // type: "timeline" as const,
     title: "Project Timeline",
     content: (
       <GanttChart
@@ -62,11 +62,28 @@ export function DocumentPhase({
         onTasksUpdate={setTimelineTasks}
       />
     ),
-    editable: false,
-    visible: true,
     createdAt: new Date(),
-    position: 0,
-  };
+  });
+
+  useEffect(() => {
+    const newTimelinedoc = {
+      id: `project-timeline-${Date.now()}`,
+      title: "Project Timeline",
+      content: (
+        <GanttChart
+          businessPlan={businessPlan}
+          showControls={true}
+          cardTitle="Project Timeline"
+          cardDescription="Track your milestones"
+          tasks={timelineTasks}
+          onTasksUpdate={setTimelineTasks}
+        />
+      ),
+      createdAt: new Date(),
+    };
+    setTimelineDoc(newTimelinedoc);
+    setActiveDocument(newTimelinedoc);
+  }, [timelineTasks]);
 
   const {
     addProductEntry,
