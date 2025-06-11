@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LogData } from "@/types";
+import { BusinessPlanSection, LogData } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -42,15 +42,19 @@ interface EvaluationData {
 
 interface EvaluationPhaseProps {
   businessPlan: LogData | null;
+  rejectedPlans: BusinessPlanSection[][];
   logs: LogData[];
+  problemStatement?: string;
   companyValue: number;
   onRestart?: () => void;
 }
 
 export function EvaluationPhase({
   businessPlan,
+  rejectedPlans,
   logs,
   companyValue,
+  problemStatement,
   onRestart,
 }: EvaluationPhaseProps) {
   const [evaluation, setEvaluation] = useState<EvaluationData | null>(null);
@@ -75,7 +79,6 @@ export function EvaluationPhase({
             }`
         )
         .join("\n\n");
-
       const response = await fetch("/api/evaluatePerformance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,7 +87,12 @@ export function EvaluationPhase({
             typeof businessPlan?.content === "string"
               ? businessPlan.content
               : "Business plan content not available",
-          logs,
+          logs: buildLogs || "No build logs available",
+          rejectedPlans: rejectedPlans
+            .flat()
+            .map((section) => section.title + ": " + section.value)
+            .join("\n"),
+          problemStatement: problemStatement || "No problem statement provided",
           companyValue: companyValue ?? 0,
         }),
       });

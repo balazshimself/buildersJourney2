@@ -6,13 +6,20 @@ import { PromptTemplate } from "@langchain/core/prompts";
 
 export const runtime = "edge";
 
-const TEMPLATE = `You are an expert business evaluator for a startup simulation game. 
-Evaluate the player's complete business journey including their initial plan and all decisions made.
+const TEMPLATE = `You are a business evaluator for a startup simulation game, where the player has 30 minutes to come up with a business
+based on a problem statement and "build it" iteratively, through prompting an AI.
+Evaluate the player's complete business journey honesty, but fairly - most startups fail sugar-coating helps no one, but keep in mind that
+these plans are created in 30 minutes, not multiple months.
 
-REJECTED BUSINESS PLANS:
-{businessPlan}
+Here is the player's journey:
 
-ORIGINAL BUSINESS PLAN:
+PROBLEM STATEMENT:
+{problemStatement}
+
+REJECTED PLANS:
+{rejectedPlans}
+
+BUSINESS PLAN:
 {businessPlan}
 
 BUSINESS DECISIONS & BUILD LOGS:
@@ -22,8 +29,8 @@ FINAL COMPANY VALUE: {companyValue}
 
 Your task is to provide a comprehensive evaluation including:
 
-1. **Overall Score (0-100)**: Based on plan quality, decision consistency, market understanding, and execution
-2. **Detailed Feedback**: Analyze strengths, weaknesses, and key insights
+1. **Overall Score (0-100)**: Most players should score 40-80. **CRUCIAL** the player has 5 minutes to come up with an idea, and 25 minutes to build it. About 70% of the points should come from the decisions made and the logs.
+2. **Direct Feedback**: Call out what worked, what didn't, and what was outright bad
 3. **Category Scores**: Rate each area out of 10:
    - Strategy & Planning
    - Market Understanding  
@@ -32,14 +39,41 @@ Your task is to provide a comprehensive evaluation including:
    - Financial Management
    - Adaptability & Learning
 
-Consider:
-- The quality of the initial business plan
-- Quality and consistency of business decisions
-- Evidence of learning and adaptation
-- Realistic approach to challenges
+SCORING GUIDELINES:
+- 85-100: Very strong (would likely get real funding)
+- 70-84: Good (viable business with room to grow)
+- 60-69: Decent (some good ideas, execution issues)
+- 50-59: Mediocre (some flaws but ideas are there)
+- 40-49: Poor (fundamental problems, but some redeeming qualities)
+- 30-39: Bad (would likely fail quickly)
+- 0-29: Terrible (completely unrealistic, or no accepted business plan)
 
-Provide constructive feedback that highlights both successes and areas for improvement. It is vital, to be cruel if needed.
-If the business isn't standing on a strong enough foundation, let the user know now, don't be afraid to score low.`;
+EVALUATION CRITERIA:
+- Business plan: Was it realistic? Specific enough? Addressed the actual problem?
+- Decision consistency: Did choices align with the plan? Learn from feedback?
+- Market understanding: Knew the target audience? Realistic about competition?
+- Execution: Made smart resource allocation? Avoided obvious mistakes?
+
+FEEDBACK STYLE - Be direct and honest:
+- DON'T SAY: "Your approach shows promise but could benefit from refinement"
+- DO SAY: "Your target market was way too broad. 'Everyone who eats food' isn't a customer segment."
+
+- DON'T SAY: "Consider exploring additional revenue streams"  
+- DO SAY: "You burned through cash with no clear path to profitability. That's not sustainable."
+
+- DON'T SAY: "Your marketing strategy demonstrates creativity"
+- DO SAY: "Spending 60% of budget on Instagram ads without testing was reckless."
+
+Consider the full journey:
+- Initial plan quality and realism
+- Learning from rejections and feedback
+- Smart vs wasteful spending decisions
+- Evidence of understanding market dynamics
+- Ability to pivot when needed
+
+Be constructive but if someone built a weak foundation, tell them directly. 
+If they made amateur mistakes, call them out. 
+If they did well, acknowledge it clearly.`;
 
 const EvaluationSchema = z.object({
   overallScore: z.number(),
@@ -70,7 +104,13 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { businessPlan, buildLogs, companyValue } = body;
+    const {
+      businessPlan,
+      buildLogs,
+      companyValue,
+      rejectedPlans,
+      problemStatement,
+    } = body;
 
     const prompt = PromptTemplate.fromTemplate(TEMPLATE);
     const model = new ChatOpenAI({
@@ -85,7 +125,9 @@ export async function POST(req: NextRequest) {
     const result = await chain.invoke({
       businessPlan: businessPlan || "No business plan provided",
       buildLogs: buildLogs || "No build logs available",
+      rejectedPlans: rejectedPlans || "No rejected plans",
       companyValue: companyValue || 0,
+      problemStatement: problemStatement || "No problem statement provided",
     });
 
     return NextResponse.json(result, { status: 200 });

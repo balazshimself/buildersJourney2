@@ -42,6 +42,7 @@ interface SidebarLayoutProps {
   onShowProductDocument: () => DocumentType;
   onShowMarketingDocument: () => DocumentType;
   onShowManagementDocument: () => DocumentType;
+  onDemoAddComponent: () => void; // Add this
 }
 
 export function SidebarLayout({
@@ -55,6 +56,7 @@ export function SidebarLayout({
   onShowProductDocument,
   onShowMarketingDocument,
   onShowManagementDocument,
+  onDemoAddComponent,
 }: SidebarLayoutProps) {
   return (
     <Sidebar className="w-64 border-r border-border">
@@ -62,6 +64,16 @@ export function SidebarLayout({
         <div className="space-y-2">
           <div className="text-sm text-gray-600">Company Balance</div>
           <div className="text-xl font-semibold">${companyValue}</div>
+          <div className={`w-full`}>
+            <div className="w-full bg-gray-400 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                style={{
+                  width: `${Math.min((companyValue / 100000) * 100, 100)}%`,
+                }}
+              />
+            </div>
+          </div>
           <div className="text-xs text-gray-500 text-right">
             Target: $100,000
           </div>
@@ -188,7 +200,19 @@ export function SidebarLayout({
       </SidebarContent>
 
       <SidebarFooter>
-        <div>
+        <div className="flex flex-col gap-2">
+          <button
+            className={cn(
+              "w-full py-2 px-3 rounded-md text-sm font-medium",
+              "flex items-center justify-center space-x-2",
+              "bg-red-300 border border-gray-300",
+              "hover:bg-gray-50 text-gray-700 transition-colors"
+            )}
+            onClick={onDemoAddComponent}
+          >
+            DEMO random components
+          </button>
+
           <button
             className={cn(
               "w-full py-2 px-1 rounded-md text-sm font-medium",
@@ -219,20 +243,20 @@ export function SidebarLayout({
             <RocketIcon className="h-4 w-4 text-white" />
             <span>Build something!</span>
           </button>
-        </div>
 
-        <button
-          className={cn(
-            "w-full py-2 px-3 rounded-md text-sm font-medium mt-2",
-            "flex items-center justify-center space-x-2",
-            "bg-white border border-gray-300",
-            "hover:bg-gray-50 text-gray-700 transition-colors"
-          )}
-          onClick={handleTimelineClick}
-        >
-          <ClockIcon className="h-4 w-4 text-gray-500" />
-          <span>Project Timeline</span>
-        </button>
+          <button
+            className={cn(
+              "w-full py-2 px-3 rounded-md text-sm font-medium",
+              "flex items-center justify-center space-x-2",
+              "bg-white border border-gray-300",
+              "hover:bg-gray-50 text-gray-700 transition-colors"
+            )}
+            onClick={handleTimelineClick}
+          >
+            <ClockIcon className="h-4 w-4 text-gray-500" />
+            <span>Project Timeline</span>
+          </button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

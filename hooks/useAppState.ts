@@ -1,7 +1,6 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { AppState, BusinessPlanSection, LogData, Problem } from "@/types";
 import problemsData from "@/data/problems.json";
-import { OptimizedTimerRef } from "@/components/ui/optimizedTimer";
 
 const INITIAL_STATE: AppState = {
   currentPhase: "rules",
@@ -11,7 +10,6 @@ const INITIAL_STATE: AppState = {
   currentProblem: null,
   businessPlan: null,
   logs: [],
-  timer: 0,
   sectionFeedback: [],
   companyValue: 5000,
 };
@@ -33,7 +31,6 @@ export const useAppState = () => {
       currentPhase: "problem",
       currentProblem: selectedProblem,
       sectionFeedback: [],
-      timer: 10, // 300
     }));
   }, [state]);
 
@@ -50,6 +47,24 @@ export const useAppState = () => {
 
   const startDocumentPhase = useCallback(
     (result: any) => {
+      const marketingCards = result.initialTemplates.marketing
+        ? [result.initialTemplates.marketing]
+        : [];
+      const productCards = result.initialTemplates.product
+        ? [result.initialTemplates.product]
+        : [];
+      const managementCards = result.initialTemplates.management
+        ? [result.initialTemplates.management]
+        : [];
+
+      console.log(
+        "HERE KITTY YOU CAN HAS CHEESEBURGER",
+        marketingCards,
+        productCards,
+        managementCards
+      );
+
+      console.log("Starting document phase with result:", result);
       // Create the business plan document
       const businessPlan: LogData = {
         id: "business-plan",
@@ -66,7 +81,9 @@ export const useAppState = () => {
         currentPhase: "document",
         logs: [],
         businessPlan: businessPlan,
-        timer: 120,
+        marketingCards: marketingCards,
+        productCards: productCards,
+        managementCards: managementCards,
         sectionFeedback: [],
         isLoading: false,
       }));
@@ -116,8 +133,6 @@ export const useAppState = () => {
           }),
         });
 
-        setSubmittedBusinessPlans((prev) => [...prev, sections]);
-
         if (!response.ok) {
           throw new Error("Failed to validate business plan");
         }
@@ -127,12 +142,9 @@ export const useAppState = () => {
         console.log("Validation result:", result);
 
         if (result.type === "accepted") {
-          // Access formalizedPlan from result.response
-          startDocumentPhase({
-            type: "accepted",
-            formalizedPlan: result.response.formalizedPlan,
-          });
+          startDocumentPhase(result.response);
         } else {
+          setSubmittedBusinessPlans((prev) => [...prev, sections]);
           if (submittedBusinessPlans.length >= 2 && timer! <= 20) {
             console.log("Max attempts reached, showing final feedback.");
             setState((prevState) => ({
@@ -192,22 +204,15 @@ export const useAppState = () => {
     [state]
   );
 
-  const updateTimer = useCallback((newTime: number) => {
-    setState((prevState) => ({
-      ...prevState,
-      timer: newTime,
-    }));
-  }, []);
-
   return {
     state,
+    submittedBusinessPlans,
     startProblemPhase,
     startEvaluationPhase,
     evaluateSolution,
     testEvaluate,
     addDocument,
     updateDocument,
-    updateTimer,
     updateCompanyValue,
   };
 };

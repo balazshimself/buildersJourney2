@@ -18,6 +18,7 @@ declare global {
 export default function Home() {
   const {
     state,
+    submittedBusinessPlans,
     startProblemPhase,
     testEvaluate,
     evaluateSolution,
@@ -47,8 +48,10 @@ export default function Home() {
         return (
           <SidebarProvider>
             <DocumentPhase
+              marketingCards={state.marketingCards[0]}
+              productCards={state.productCards[0]}
+              managementCards={state.managementCards[0]}
               logs={state.logs}
-              timer={state.timer}
               businessPlan={state.businessPlan}
               companyValue={state.companyValue}
               onAddDocument={addDocument}
@@ -67,7 +70,11 @@ export default function Home() {
         return (
           <EvaluationPhase
             logs={state.logs}
+            rejectedPlans={submittedBusinessPlans}
             businessPlan={state.businessPlan}
+            problemStatement={
+              state.currentProblem?.sections.problemOverview.desc
+            }
             companyValue={state.companyValue || 5000}
           />
         );

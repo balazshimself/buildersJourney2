@@ -60,6 +60,15 @@ export function ProblemPhase({
   const [waiting, setWaiting] = useState(false);
   const timerRef = useRef<OptimizedTimerRef>(null);
 
+  const DEMO_DATA = {
+    "problem-solution":
+      "Build a simple website platform that lets local restaurants take orders directly without paying huge fees to delivery apps. Restaurants get their own ordering page and can manage everything through a basic dashboard. There, customers can find local restaurants nearby and order directly from them.",
+    "target-audience":
+      "Small family restaurants that are struggling with delivery app fees but need online ordering. I'll reach out to restaurant owners directly and partner with local food bloggers, and post in neighborhood Facebook groups where restaurant owners hang out. Focus on places that aren't big chains.",
+    financials:
+      "Charge restaurants a low monthly fee instead of taking a percentage of every order like the big apps do. This way restaurants keep more of their money. Start with just a few local restaurants and grow from there. Maybe add payment processing for a small fee to make money that way too.",
+  };
+
   useEffect(() => {
     setWaiting(false);
     console.log("ASDASD", sectionFeedback);
@@ -107,6 +116,15 @@ export function ProblemPhase({
     setOpenTooltip(null);
   };
 
+  const fillDemoData = () => {
+    setSections((prev) =>
+      prev.map((section) => ({
+        ...section,
+        value: DEMO_DATA[section.id as keyof typeof DEMO_DATA] || "",
+      }))
+    );
+  };
+
   const getSectionIcon = (sectionId: string) => {
     switch (sectionId) {
       case "problem-solution":
@@ -141,6 +159,15 @@ export function ProblemPhase({
                 Dev Skip
               </Button>
             )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fillDemoData}
+              className="text-sm bg-red-300"
+            >
+              Demo Input
+            </Button>
             <OptimizedTimer
               ref={timerRef}
               initialTime={6 * 60}
@@ -282,12 +309,36 @@ export function ProblemPhase({
                   <Button
                     onClick={handleSubmit}
                     disabled={!isFormValid() || waiting}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
                     size="lg"
                   >
-                    {waiting
-                      ? "Evaluating Solution..."
-                      : "Submit Technical Plan"}
+                    {waiting ? (
+                      <>
+                        <svg
+                          className="animate-spin h-5 w-5 mr-2 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C6.477 0 2 4.477 2 10h2zm2 5.291A7.962 7.962 0 014 12H2c0 3.042 1.135 5.824 3 7.938l1-1.647z"
+                          ></path>
+                        </svg>
+                        Evaluating Solution...
+                      </>
+                    ) : (
+                      "Submit Technical Plan"
+                    )}
                   </Button>
                 </div>
               </CardContent>

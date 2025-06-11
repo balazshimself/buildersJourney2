@@ -64,7 +64,6 @@ export interface AppState {
   managementCards: CardComponent[];
   logs: LogData[];
   sectionFeedback: SectionFeedback[];
-  timer: number;
   businessPlan: LogData | null;
   companyValue: number;
 }

@@ -6,73 +6,67 @@ import {
   ProgressBarTemplate,
   StaticTextTemplate,
 } from "@/components/documentPhase/templates/templateCompontents";
-import { TemplateType } from "@/types/templates";
 
-export function useSpecializedDocuments() {
+export function useSpecializedDocuments(
+  marketingCard?: JSX.Element,
+  productCard?: JSX.Element,
+  managementCard?: JSX.Element
+) {
   const [marketingEntries, setMarketingEntries] = useState<
     { data: JSX.Element; timestamp: Date }[]
-  >([]);
+  >(marketingCard ? [{ data: marketingCard, timestamp: new Date() }] : []);
   const [managementEntries, setManagementEntries] = useState<
     { data: JSX.Element; timestamp: Date }[]
-  >([]);
+  >(managementCard ? [{ data: managementCard, timestamp: new Date() }] : []);
 
-  const progressBarExample = (
-    <ProgressBarTemplate
-      data={{
-        type: TemplateType.ProgressBar,
-        title: "Prototype creation",
-        checkpointData: [
-          "Figure out wtf",
-          "Iteration",
-          "???",
-          "Sourcing components",
-          "Profit",
-        ],
-        currentCheckpointIndex: 0,
-        reward: "1000$",
-      }}
-    />
-  );
+  // const progressBarExample = (
+  //   <ProgressBarTemplate
+  //     data={{
+  //       type: TemplateType.ProgressBar,
+  //       title: "Prototype creation",
+  //       checkpointData: [
+  //         "Figure out wtf",
+  //         "Iteration",
+  //         "???",
+  //         "Sourcing components",
+  //         "Profit",
+  //       ],
+  //       currentCheckpointIndex: 0,
+  //       reward: "1000$",
+  //     }}
+  //   />
+  // );
 
-  const cardChoiceTemplate: React.ReactElement = (
-    <CardChoiceTemplate
-      data={{
-        type: TemplateType.CardChoice,
-        title: "Hire choice",
-        description: "Choose who to hire!",
-        cards: [
-          {
-            title: "Alice Johnson",
-            description:
-              "Experienced frontend developer with a passion for UI/UX.",
-            buttonString: "Hire Alice",
-          },
-          {
-            title: "Bob Smith",
-            description: "Backend engineer specializing in scalable APIs.",
-            buttonString: "Hire Bob",
-          },
-          {
-            title: "Carol Lee",
-            description: "Full-stack developer and agile team leader.",
-            buttonString: "Hire Carol",
-          },
-        ],
-      }}
-    />
-  );
+  // const cardChoiceTemplate: React.ReactElement = (
+  //   <CardChoiceTemplate
+  //     data={{
+  //       type: TemplateType.CardChoice,
+  //       title: "Hire choice",
+  //       description: "Choose who to hire!",
+  //       cards: [
+  //         {
+  //           title: "Alice Johnson",
+  //           description:
+  //             "Experienced frontend developer with a passion for UI/UX.",
+  //           buttonString: "Hire Alice",
+  //         },
+  //         {
+  //           title: "Bob Smith",
+  //           description: "Backend engineer specializing in scalable APIs.",
+  //           buttonString: "Hire Bob",
+  //         },
+  //         {
+  //           title: "Carol Lee",
+  //           description: "Full-stack developer and agile team leader.",
+  //           buttonString: "Hire Carol",
+  //         },
+  //       ],
+  //     }}
+  //   />
+  // );
   const [productEntries, setProductEntries] = useState<
     { data: JSX.Element; timestamp: Date }[]
-  >([
-    {
-      data: progressBarExample,
-      timestamp: new Date(),
-    },
-    {
-      data: cardChoiceTemplate,
-      timestamp: new Date(),
-    },
-  ]);
+  >(productCard ? [{ data: productCard, timestamp: new Date() }] : []);
 
   // Functions to add entries to each specialized document
   const addProductEntry = useCallback(

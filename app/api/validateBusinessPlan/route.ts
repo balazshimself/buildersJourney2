@@ -1,10 +1,10 @@
-// app/api/validateBusinessPlan/route.ts - Fixed version
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { micromark } from "micromark";
 import { BusinessPlanSection, ResponseTypes } from "@/types";
+import { TemplateType } from "@/types/templates";
 import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "edge";
@@ -29,9 +29,93 @@ EVALUATION CRITERIA (for 5-minute brainstorming):
 - implementation: Are the first steps actionable with realistic resource requirements?
 
 RESPONSE GUIDELINES:
-- If ALL sections show a viable business concept (even if rough), respond with type "ACCEPTED" and create a comprehensive formalized business plan
+- If ALL sections show viable ideas, respond with type "ACCEPTED" and create a comprehensive formalized business plan PLUS 1-2 initial templates.
+  The player is going to provide rough ideas, due to the time constraint, so be VERY forgiving. 
 - If ANY section is too vague, unrealistic, or doesn't address the problem, respond with type "REJECTED" and provide section-specific feedback
 - **CRITICAL**: Use ONLY these exact section IDs in your sectionFeedback: {sectionIDS}
+
+TEMPLATES FOR ACCEPTED PLANS:
+When accepting, include 1-2 templates to give the player initial momentum:
+
+IMPORTANT: 
+- The formalizedPlan should ONLY contain the business plan text in markdown format
+- The initialTemplates should be separate JSON objects in the response structure
+- Do NOT include template examples or JSON code blocks in the formalizedPlan text
+
+StaticTextTemplate (for updates/events):
+{{
+  "type": "static_text",
+  "title": "Event Title",
+  "text": "Description of what happened"
+}}
+
+ProgressBarTemplate (for trackable goals):
+{{
+  "type": "progress_bar", 
+  "title": "Goal Name",
+  "checkpointData": ["Step 1", "Step 2", "Step 3", "Final Step"],
+  "reward": "What they get when complete"
+}}
+
+CardChoiceTemplate (for decisions):
+{{
+  "type": "card_choice",
+  "title": "Decision Title",
+  "description": "Context for the choice",
+  "cards": [
+    {{
+      "title": "Option 1",
+      "description": "What this choice does",
+      "buttonString": "Choose Option 1"
+    }},
+    {{
+      "title": "Option 2", 
+      "description": "What this choice does",
+      "buttonString": "Choose Option 2"
+    }}
+  ]
+}}
+
+TEMPLATE EXAMPLES FOR RESTAURANT ORDERING PLATFORM:
+
+Example Marketing Template:
+{{
+  "type": "progress_bar",
+  "title": "Local Restaurant Outreach",
+  "checkpointData": ["Contact 5 restaurants", "Get 2 interested", "Schedule demos", "Sign first partner"],
+  "reward": "First restaurant partnership + $200 revenue"
+}}
+
+Example Product Template:
+{{
+  "type": "card_choice",
+  "title": "Platform Development Priority",
+  "description": "You need to build your ordering platform. What should you focus on first?",
+  "cards": [
+    {{
+      "title": "Restaurant Dashboard",
+      "description": "Build the admin panel for restaurants to manage orders and menus",
+      "buttonString": "Build Dashboard First"
+    }},
+    {{
+      "title": "Customer App",
+      "description": "Create the customer-facing ordering interface and discovery features", 
+      "buttonString": "Build App First"
+    }},
+    {{
+      "title": "MVP Website",
+      "description": "Start with a simple website that handles basic ordering",
+      "buttonString": "Build Website First"
+    }}
+  ]
+}}
+
+Example Management Template:
+{{
+  "type": "static_text",
+  "title": "Angel Investor Interest",
+  "text": "A local angel investor heard about your restaurant platform through a mutual connection. They're interested in learning more about your business model and early traction. This could be an opportunity for seed funding, but you'll need to show some initial restaurant partnerships first."
+}}
 
 FEEDBACK STYLE - Be direct and concise:
 - BAD: "Your target audience could benefit from additional specificity and demographic details to better understand your customer base"
@@ -48,71 +132,96 @@ For repeat submissions:
 - Focus only on remaining issues
 - After multiple rejections, be blunt: "This still doesn't work because..." and give specific fixes needed
 
-EXAMPLE EVALUATIONS:
+EXAMPLE EVALUATION - ACCEPTANCE:
 
-Example 1 - REJECTION (too vague):
-User input in the problem-solution input: "I will create an app for restaurants"
-Response: {{
-  "type": "REJECTED",
+User inputs for the 3 sections:
+
+Section problem-solution: "Build a simple website platform that lets local restaurants take orders directly without paying huge fees to delivery apps. Restaurants get their own ordering page and can manage everything through a basic dashboard. Customers can find local restaurants nearby and order directly from them instead of going through expensive third-party apps."
+
+Section target-audience: "Small family restaurants that are struggling with delivery app fees but need online ordering. I'll reach out to restaurant owners directly, maybe partner with local food bloggers, and post in neighborhood Facebook groups where restaurant owners hang out. Focus on places that aren't big chains."
+
+Section financials: "Charge restaurants a low monthly fee instead of taking a percentage of every order like the big apps do. This way restaurants keep more of their money. Start with just a few local restaurants and grow from there. Maybe add payment processing for a small fee to make money that way too."
+
+Response:
+{{
+  "type": "ACCEPTED",
   "response": {{
-    "sectionFeedback": [
-      {{
-        "sectionId": "problem-solution",
-        "isValid": false,
-        "feedback": "What does the app actually do? The problem is high delivery fees - how does your app solve this?"
+    "formalizedPlan": "# Local Restaurant Direct Ordering Platform\n\n## Problem Statement\nLocal restaurants face a dilemma: customers increasingly expect online ordering and delivery options, but platforms like DoorDash and UberEats charge 15-30% commission fees that devastate already thin profit margins...\n\n## Solution\nA commission-free online ordering platform that allows local restaurants to take orders directly through their own branded ordering pages...\n\n## Target Market\nFamily-owned restaurants with 2-15 employees who are currently losing 15-30% of profits to delivery platforms...\n\n## Revenue Model\nFlat monthly subscription fee of $49 per restaurant instead of per-order commissions...",
+    "initialTemplates": {{
+      "marketing": {{
+        "type": "progress_bar",
+        "title": "Local Restaurant Outreach",
+        "checkpointData": ["Contact 5 restaurants", "Get 2 interested", "Schedule demos", "Sign first partner"],
+        "reward": "First restaurant partnership + $200 revenue"
       }},
-      ...
-    ],
-    "overallMessage": "Too generic. Need specific features and clear target market."
-  }}
-}}
-
-Example 2 - ACCEPTANCE (good brainstorm):
-User input: "Commission-free ordering platform for small restaurants. Target family-owned places with less than 10 employees. Charge monthly instead of 15% per order. Use connections for pilot testing."
-Response: {{
-  "type": "ACCEPTED", 
-  "response": {{
-    "formalizedPlan": "Local Restaurant Direct Ordering Platform\n\nProblem: Independent restaurants lose 15-30% profit to delivery platforms...\n\nSolution: Commission-free ordering platform charging flat $49/month...\n\n[Full formatted business plan]"
-  }}
-}}
-
-Example 3 - BLUNT REJECTION (repeat offender):
-User input: "Make restaurants better with technology"
-Response: {{
-  "type": "REJECTED",
-  "response": {{
-    "sectionFeedback": [
-      {{
-        "sectionId": "problem-solution",
-        "isValid": false, 
-        "feedback": "This still doesn't work. 'Make better with technology' isn't a solution. The problem is delivery fees - propose something concrete like 'direct ordering system' or 'loyalty app.'"
-      }}
-    ],
-    "overallMessage": "Third attempt still too vague. You need actual features and implementation steps."
-  }}
-}}
-  
-Example 3 - BLUNT REJECTION (irrelevant input):
-User input: "ASDAGsdsasd I like pizza"
-Response: {{
-  "type": "REJECTED",
-  "response": {{
-    "sectionFeedback": [
-      {{
-        "sectionId": "problem-solution",
-        "isValid": false, 
-        "feedback": "Your input does not provide any relevant information."
-      }}
-    ],
-    "overallMessage": "Attempt way too vague. You need actual features and implementation steps."
+      "product": {{
+        "type": "card_choice",
+        "title": "Platform Development Priority",
+        "description": "You need to build your ordering platform. What should you focus on first?",
+        "cards": [
+          {{
+            "title": "Restaurant Dashboard",
+            "description": "Build the admin panel for restaurants to manage orders and menus",
+            "buttonString": "Build Dashboard First"
+          }},
+          {{
+            "title": "Customer App",
+            "description": "Create the customer-facing ordering interface and discovery features",
+            "buttonString": "Build App First"
+          }}
+        ]
+      }},
+      "management": null
+    }}
   }}
 }}`;
+
+const StaticTextTemplateSchema = z.object({
+  type: z.literal(TemplateType.StaticText),
+  title: z.string(),
+  text: z.string(),
+});
+
+const ProgressBarTemplateSchema = z.object({
+  type: z.literal(TemplateType.ProgressBar),
+  title: z.string(),
+  checkpointData: z.array(z.string()),
+  reward: z.string(),
+});
+
+const CardChoiceTemplateSchema = z.object({
+  type: z.literal(TemplateType.CardChoice),
+  title: z.string(),
+  description: z.string(),
+  cards: z.array(
+    z.object({
+      title: z.string(),
+      description: z.string(),
+      buttonString: z.string(),
+    })
+  ),
+});
+
+const TemplateSchema = z.union([
+  StaticTextTemplateSchema,
+  ProgressBarTemplateSchema,
+  CardChoiceTemplateSchema,
+]);
 
 const AcceptedResponseSchema = z.object({
   formalizedPlan: z
     .string()
     .describe(
       "A comprehensive, well-structured business plan that combines all sections into a cohesive document"
+    ),
+  initialTemplates: z
+    .object({
+      marketing: TemplateSchema.nullable(),
+      product: TemplateSchema.nullable(),
+      management: TemplateSchema.nullable(),
+    })
+    .describe(
+      "1-2 initial templates to give the player momentum in the document phase"
     ),
 });
 
@@ -140,6 +249,11 @@ export interface ValidationResponse {
   type: ResponseTypes.ACCEPTED | ResponseTypes.REJECTED;
   response: {
     formalizedPlan?: string;
+    initialTemplates?: {
+      marketing?: any;
+      product?: any;
+      management?: any;
+    };
     sectionFeedback?: Array<{
       sectionId: string;
       isValid: boolean;
@@ -274,6 +388,8 @@ export async function POST(
         result.response.formalizedPlan
       );
     }
+
+    console.log("Validation result:", result);
 
     return NextResponse.json(result, { status: 200 });
   } catch (e: any) {

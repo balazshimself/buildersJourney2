@@ -5,7 +5,6 @@ import { LogData as DocumentType } from "@/types";
 
 interface DocumentEditorProps {
   activeDocument: DocumentType | null;
-  timer: number;
 }
 
 export function DocumentEditor({ activeDocument }: DocumentEditorProps) {
@@ -25,7 +24,6 @@ export function DocumentEditor({ activeDocument }: DocumentEditorProps) {
       return <div dangerouslySetInnerHTML={{ __html: content }} />;
     }
 
-    // Otherwise just render as text
     return content;
   };
 

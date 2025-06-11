@@ -9,10 +9,19 @@ import { useSpecializedDocuments } from "@/hooks/useSpecializedDocuments";
 import { GanttChart } from "@/components/documentPhase/projectTimeline";
 import { GanttTask } from "@/types/gantt";
 import { Button } from "../ui/button";
+import {
+  CardChoiceTemplate,
+  ProgressBarTemplate,
+  StaticTextTemplate,
+  TemplateRenderer,
+} from "./templates/templateCompontents";
+import { CardComponent, TemplateType } from "@/types/templates";
 interface DocumentPhaseProps {
   businessPlan: LogData | null;
+  marketingCards?: CardComponent;
+  productCards?: CardComponent;
+  managementCards?: CardComponent;
   logs: LogData[];
-  timer: number;
   companyValue: number;
   onUpdateDocument: (id: string, updates: Partial<LogData>) => void;
   onAddDocument: (
@@ -24,8 +33,10 @@ interface DocumentPhaseProps {
 
 export function DocumentPhase({
   businessPlan,
+  marketingCards,
+  productCards,
+  managementCards,
   logs: documents,
-  timer,
   companyValue,
   onUpdateDocument,
   onAddDocument,
@@ -35,37 +46,26 @@ export function DocumentPhase({
   const [activeDocument, setActiveDocument] = useState<LogData | null>(
     businessPlan
   );
-  const [calledEval, setCalledEval] = useState(false);
   const [timelineTasks, setTimelineTasks] = useState<GanttTask[]>([]);
 
-  useEffect(() => {
-    handleTimelineClick();
-  }, [timelineTasks]);
-
-  const handleTimelineClick = () => {
-    console.log("Timeline tasks to init with:", timelineTasks);
-    // Initialize the ProjectTimeline component
-    const timelineDoc = {
-      id: `project-timeline-${Date.now()}`,
-      type: "timeline" as const,
-      title: "Project Timeline",
-      content: (
-        <GanttChart
-          businessPlan={businessPlan}
-          showControls={true}
-          cardTitle="Project Timeline"
-          cardDescription="Track your milestones"
-          tasks={timelineTasks}
-          onTasksUpdate={setTimelineTasks}
-        />
-      ),
-      editable: false,
-      visible: true,
-      createdAt: new Date(),
-      position: 0,
-    };
-
-    setActiveDocument(timelineDoc);
+  const timelineDoc = {
+    id: `project-timeline-${Date.now()}`,
+    type: "timeline" as const,
+    title: "Project Timeline",
+    content: (
+      <GanttChart
+        businessPlan={businessPlan}
+        showControls={true}
+        cardTitle="Project Timeline"
+        cardDescription="Track your milestones"
+        tasks={timelineTasks}
+        onTasksUpdate={setTimelineTasks}
+      />
+    ),
+    editable: false,
+    visible: true,
+    createdAt: new Date(),
+    position: 0,
   };
 
   const {
@@ -75,7 +75,13 @@ export function DocumentPhase({
     showProductDocument,
     showMarketingDocument,
     showManagementDocument,
-  } = useSpecializedDocuments();
+  } = useSpecializedDocuments(
+    marketingCards ? <TemplateRenderer template={marketingCards} /> : undefined,
+    productCards ? <TemplateRenderer template={productCards} /> : undefined,
+    managementCards ? (
+      <TemplateRenderer template={managementCards} />
+    ) : undefined
+  );
 
   const intervalsRef = useRef<Record<string, NodeJS.Timeout>>({});
   const processedDocsRef = useRef<Set<string>>(new Set());
@@ -87,13 +93,6 @@ export function DocumentPhase({
       intervalsRef.current = {};
     };
   }, []);
-
-  useEffect(() => {
-    if (timer === 0 && !calledEval) {
-      startEvaluationPhase();
-      setCalledEval(true);
-    }
-  }, [timer]);
 
   useEffect(() => {
     console.log("Here is the companyvalue: ", companyValue);
@@ -226,6 +225,75 @@ export function DocumentPhase({
     setActiveDocument(doc);
   };
 
+  // In documentPhase.tsx
+  const handleDemoAddComponent = () => {
+    const now = new Date();
+
+    // Create some predefined components
+    const demoComponents = [
+      <StaticTextTemplate
+        data={{
+          type: TemplateType.StaticText,
+          title: "Demo Update",
+          text: "This is a demo static text component added randomly!",
+        }}
+      />,
+
+      <ProgressBarTemplate
+        data={{
+          type: TemplateType.ProgressBar,
+          title: "Demo Progress",
+          checkpointData: ["Step 1", "Step 2", "Step 3", "Complete"],
+          currentCheckpointIndex: Math.floor(Math.random() * 4),
+          reward: "$500 demo reward",
+        }}
+      />,
+
+      <CardChoiceTemplate
+        data={{
+          type: TemplateType.CardChoice,
+          title: "Demo Choice",
+          description: "Choose your demo option:",
+          cards: [
+            {
+              title: "Option A",
+              description: "Demo option A",
+              buttonString: "Choose A",
+            },
+            {
+              title: "Option B",
+              description: "Demo option B",
+              buttonString: "Choose B",
+            },
+          ],
+        }}
+      />,
+    ];
+
+    // Pick random component and random document
+    const randomComponent =
+      demoComponents[Math.floor(Math.random() * demoComponents.length)];
+    const documents = ["product", "marketing", "management"];
+    const randomDoc = documents[Math.floor(Math.random() * documents.length)];
+
+    // Add to the appropriate document
+    const entry = { data: randomComponent, timestamp: now };
+
+    switch (randomDoc) {
+      case "product":
+        addProductEntry(entry);
+        break;
+      case "marketing":
+        addMarketingEntry(entry);
+        break;
+      case "management":
+        addManagementEntry(entry);
+        break;
+    }
+
+    console.log(`Added demo component to ${randomDoc} document`);
+  };
+
   return (
     <div className="h-full flex flex-row w-full">
       {/* Sidebar on the left */}
@@ -240,9 +308,9 @@ export function DocumentPhase({
         onShowProductDocument={showProductDocument}
         onShowMarketingDocument={showMarketingDocument}
         onShowManagementDocument={showManagementDocument}
-        handleTimelineClick={handleTimelineClick}
+        onDemoAddComponent={handleDemoAddComponent}
+        handleTimelineClick={() => setActiveDocument(timelineDoc)}
       />
-      {/* Main content on the right */}
       <div className="flex-1 flex flex-col h-full min-w-0">
         {/* Header, aligned with sidebar width */}
         <div className="flex">
@@ -253,27 +321,29 @@ export function DocumentPhase({
                 {activeDocument?.title || "Select a document"}
               </h2>
               <div className="flex items-center space-x-4">
-                {process.env.NODE_ENV === "development" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      console.log("Dev Skip clicked");
-                      startEvaluationPhase();
-                    }}
-                    className="text-sm bg-red-300"
-                  >
-                    Dev Skip
-                  </Button>
-                )}
-                <OptimizedTimer initialTime={timer} className="min-w-28" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    console.log("Dev Skip clicked");
+                    startEvaluationPhase();
+                  }}
+                  className="text-sm bg-red-300"
+                >
+                  Skip to Evaluation
+                </Button>
+                <OptimizedTimer
+                  initialTime={20 * 60} // 20 minutes in seconds
+                  className="min-w-28"
+                  onComplete={() => startEvaluationPhase()}
+                />
               </div>
             </div>
           </div>
         </div>
         {/* Editor below header */}
         <div className="flex-1 min-w-0">
-          <DocumentEditor activeDocument={activeDocument} timer={timer} />
+          <DocumentEditor activeDocument={activeDocument} />
         </div>
       </div>
     </div>
